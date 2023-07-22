@@ -9,8 +9,6 @@ class ChartPainter extends CustomPainter {
 
   List<BezierCurve> curves;
 
-  int horizontalDivisions;
-  int verticalDivisions;
   double horizontalMax;
   double verticalMax;
   double controlRadius;
@@ -20,8 +18,6 @@ class ChartPainter extends CustomPainter {
     required this.curves,
     required this.horizontalMax,
     required this.verticalMax,
-    required this.horizontalDivisions,
-    required this.verticalDivisions,
     required this.controlRadius,
   });
 
@@ -34,28 +30,10 @@ class ChartPainter extends CustomPainter {
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
 
-    var divisionPaint = Paint()
-      ..color = theme.colorScheme.secondary
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
     // draw axes
     var origin = Offset(0, size.height);
     canvas.drawLine(Offset.zero, origin, mainPaint);
     canvas.drawLine(origin, Offset(size.width, size.height), mainPaint);
-
-    var horizontalDivisionSize = size.width / horizontalDivisions;
-    var verticalDivisionSize = size.height / verticalDivisions;
-
-    for (var i = 1; i < horizontalDivisions; i++) {
-      var x = i * horizontalDivisionSize;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), divisionPaint);
-    }
-
-    for (var i = 1; i < verticalDivisions; i++) {
-      var y = i * verticalDivisionSize;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), divisionPaint);
-    }
 
     curves = curves
         .map((c) =>

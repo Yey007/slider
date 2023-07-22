@@ -16,8 +16,6 @@ class Chart extends StatefulWidget {
 }
 
 class _ChartState extends State<Chart> {
-  static const horizontalDivisions = 5;
-  static const verticalDivisions = 5;
   static const horizontalMax = 1.0;
   static const verticalMax = 80.0;
   static const controlRadius = 10.0;
@@ -111,8 +109,6 @@ class _ChartState extends State<Chart> {
           curves: curves,
           horizontalMax: horizontalMax,
           verticalMax: verticalMax,
-          horizontalDivisions: horizontalDivisions,
-          verticalDivisions: verticalDivisions,
           controlRadius: controlRadius,
         ),
         key: painterKey,
