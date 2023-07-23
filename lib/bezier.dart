@@ -52,12 +52,10 @@ enum CurvePointType {
   controlPoint2,
 }
 
-BezierCurve transformCurveToScreenSpace(BezierCurve curve, Size screenSize,
-    double horizontalMax, double verticalMax) {
+BezierCurve transformCurveToScreenSpace(
+    BezierCurve curve, Size screenSize, Rect bounds) {
   transformPoint(Point point) {
-    var x = point.x / horizontalMax * screenSize.width;
-    var y = (verticalMax - point.y) / verticalMax * screenSize.height;
-    return Point(x, y);
+    return transformPointToScreenSpace(point, screenSize, bounds);
   }
 
   return BezierCurve(
@@ -69,15 +67,18 @@ BezierCurve transformCurveToScreenSpace(BezierCurve curve, Size screenSize,
 }
 
 Point<double> transformPointToScreenSpace(
-    Point point, Size screenSize, double horizontalMax, double verticalMax) {
-  var x = point.x / horizontalMax * screenSize.width;
-  var y = (verticalMax - point.y) / verticalMax * screenSize.height;
+    Point point, Size screenSize, Rect bounds) {
+  var x = (point.x - bounds.left) / bounds.width * screenSize.width;
+  var y = (bounds.height - (point.y - bounds.top)) /
+      bounds.height *
+      screenSize.height;
   return Point(x, y);
 }
 
 Point<double> transformPointToChartSpace(
-    Point point, Size screenSize, double horizontalMax, double verticalMax) {
-  var x = point.x / screenSize.width * horizontalMax;
-  var y = verticalMax * (1 - point.y / screenSize.height);
+    Point point, Size screenSize, Rect bounds) {
+  var x = point.x / screenSize.width * bounds.width + bounds.left;
+  var y =
+      -point.y / screenSize.height * bounds.height + bounds.top + bounds.height;
   return Point(x, y);
 }

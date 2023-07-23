@@ -6,23 +6,19 @@ import 'package:slider_app/conversion_extensions.dart';
 
 class ChartPainter extends CustomPainter {
   ThemeData theme;
-
   List<BezierCurve> curves;
-
-  double horizontalMax;
-  double verticalMax;
+  Rect bounds;
   double controlRadius;
 
   ChartPainter({
     required this.theme,
     required this.curves,
-    required this.horizontalMax,
-    required this.verticalMax,
+    required this.bounds,
     required this.controlRadius,
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
+  paint(Canvas canvas, Size size) {
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     var mainPaint = Paint()
@@ -36,23 +32,22 @@ class ChartPainter extends CustomPainter {
     canvas.drawLine(origin, Offset(size.width, size.height), mainPaint);
 
     curves = curves
-        .map((c) =>
-            transformCurveToScreenSpace(c, size, horizontalMax, verticalMax))
+        .map((c) => transformCurveToScreenSpace(c, size, bounds))
         .toList();
 
     for (var curve in curves) {
-      _drawCurve(curve, canvas, mainPaint);
+      drawCurve(curve, canvas, mainPaint);
     }
 
     for (var curve in curves) {
-      _drawPoint(curve.start, canvas, mainPaint);
-      _drawPoint(curve.end, canvas, mainPaint);
-      _drawControlPoint(curve.controlPoint1, curve.start, canvas, mainPaint);
-      _drawControlPoint(curve.controlPoint2, curve.end, canvas, mainPaint);
+      drawPoint(curve.start, canvas, mainPaint);
+      drawPoint(curve.end, canvas, mainPaint);
+      drawControlPoint(curve.controlPoint1, curve.start, canvas, mainPaint);
+      drawControlPoint(curve.controlPoint2, curve.end, canvas, mainPaint);
     }
   }
 
-  void _drawCurve(BezierCurve curve, Canvas canvas, Paint paint) {
+  drawCurve(BezierCurve curve, Canvas canvas, Paint paint) {
     var path = Path()
       ..moveTo(curve.start.x, curve.start.y)
       ..cubicTo(
@@ -67,12 +62,12 @@ class ChartPainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawPoint(Point<double> point, Canvas canvas, Paint paint) {
+  drawPoint(Point<double> point, Canvas canvas, Paint paint) {
     canvas.drawCircle(point.toOffset(), controlRadius, paint);
   }
 
-  void _drawControlPoint(Point<double> controlPoint,
-      Point<double> relatedEndpoint, Canvas canvas, Paint paint) {
+  drawControlPoint(Point<double> controlPoint, Point<double> relatedEndpoint,
+      Canvas canvas, Paint paint) {
     var r = controlRadius;
     canvas.drawCircle(controlPoint.toOffset(), r, paint);
 

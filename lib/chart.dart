@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'conversion_extensions.dart';
@@ -30,9 +31,79 @@ class _ChartState extends State<Chart> {
     )
   ];
 
+  var bounds = const Rect.fromLTWH(0, 0, horizontalMax, verticalMax);
+
   ({int curveIndex, CurvePointType curvePointType})? selectedPoint;
 
   final painterKey = GlobalKey();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onScaleStart: (details) => {
+        if (details.pointerCount == 1)
+          onPanStart(details)
+        else
+          onScaleStart(details)
+      },
+      onScaleUpdate: (details) => {
+        if (details.pointerCount == 1)
+          onPanUpdate(details)
+        else
+          onScaleUpdate(details)
+      },
+      onScaleEnd: (details) => {if (selectedPoint != null) onPanEnd()},
+      child: CustomPaint(
+        painter: ChartPainter(
+          theme: Theme.of(context),
+          curves: curves,
+          bounds: bounds,
+          controlRadius: controlRadius,
+        ),
+        key: painterKey,
+        child: Container(), // Somehow makes this expand correctly
+      ),
+    );
+  }
+
+  onPanStart(ScaleStartDetails details) {
+    var min = getClosestPoint(details.localFocalPoint.toPoint());
+
+    if (min.distance < dragRadius) {
+      setState(() {
+        selectedPoint =
+            (curveIndex: min.curveIndex, curvePointType: min.pointType);
+      });
+    }
+  }
+
+  onPanUpdate(ScaleUpdateDetails details) {
+    if (selectedPoint == null) return;
+
+    // not adding delta seems to be considerably smoother
+    var newPos = details.localFocalPoint;
+    var painter = getPainter();
+
+    if (!painter.paintBounds.deflate(10.0).contains(newPos)) return;
+
+    var chartSpace =
+        transformPointToChartSpace(newPos.toPoint(), painter.size, bounds);
+
+    setState(() {
+      curves[selectedPoint!.curveIndex][selectedPoint!.curvePointType] =
+          chartSpace;
+    });
+  }
+
+  onPanEnd() {
+    setState(() {
+      selectedPoint = null;
+    });
+  }
+
+  onScaleStart(ScaleStartDetails details) {}
+
+  onScaleUpdate(ScaleUpdateDetails details) {}
 
   RenderBox getPainter() {
     var painter = painterKey.currentContext!.findRenderObject() as RenderBox;
@@ -41,8 +112,8 @@ class _ChartState extends State<Chart> {
 
   ({int curveIndex, double distance, CurvePointType pointType}) getClosestPoint(
       Point<double> tapPoint) {
-    var screenSpace = curves.map((e) => transformCurveToScreenSpace(
-        e, getPainter().size, horizontalMax, verticalMax));
+    var screenSpace = curves
+        .map((e) => transformCurveToScreenSpace(e, getPainter().size, bounds));
     var withIndex = screenSpace.toList().asMap().entries.map((e) => (
           index: e.key,
           curve: e.value,
@@ -74,46 +145,5 @@ class _ChartState extends State<Chart> {
         value.distance < element.distance ? value : element);
 
     return min;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onPanStart: (details) => setState(() {
-        var min = getClosestPoint(details.localPosition.toPoint());
-
-        if (min.distance < dragRadius) {
-          selectedPoint =
-              (curveIndex: min.curveIndex, curvePointType: min.pointType);
-        }
-      }),
-      onPanUpdate: (details) => setState(() {
-        if (selectedPoint == null) return;
-
-        // not adding delta seems to be considerably smoother
-        var newPos = details.localPosition;
-        var painter = getPainter();
-
-        if (!painter.paintBounds.deflate(10.0).contains(newPos)) return;
-
-        curves[selectedPoint!.curveIndex][selectedPoint!.curvePointType] =
-            transformPointToChartSpace(
-                newPos.toPoint(), painter.size, horizontalMax, verticalMax);
-      }),
-      onPanEnd: (details) => setState(() {
-        selectedPoint = null;
-      }),
-      child: CustomPaint(
-        painter: ChartPainter(
-          theme: Theme.of(context),
-          curves: curves,
-          horizontalMax: horizontalMax,
-          verticalMax: verticalMax,
-          controlRadius: controlRadius,
-        ),
-        key: painterKey,
-        child: Container(), // Somehow makes this expand correctly
-      ),
-    );
   }
 }
