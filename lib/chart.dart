@@ -109,7 +109,6 @@ class _ChartState extends State<Chart> {
       scaleStartBounds = bounds;
       previousBottomLeft = bounds.bottomLeft;
     });
-    print("------------------------------------------");
   }
 
   onScaleUpdate(PointerPanZoomUpdateEvent details) {
@@ -128,6 +127,7 @@ class _ChartState extends State<Chart> {
       focalPoint.x - (startFocalDelta.x / startBoundsWidth * newWidth),
       focalPoint.y - (startFocalDelta.y / startBoundsHeight * newHeight),
     );
+
     setState(() {
       bounds = CartesianRectangle.fromBLWH(
           bottomLeft: bottomLeft, width: newWidth, height: newHeight);
@@ -176,88 +176,3 @@ class _ChartState extends State<Chart> {
     return min;
   }
 }
-
-/*
-CartesianRectangle? scaleStartBounds;
-  var bounds = const CartesianRectangle.fromLTWH(0, 0, horizontalMax, verticalMax);
-
-  ({int curveIndex, CurvePointType curvePointType})? selectedPoint;
-
-  final painterKey = GlobalKey();
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomGestureRecognizer(
-      onDragStart: onPanStart,
-      onDragUpdate: onPanUpdate,
-      onDragEnd: onPanEnd,
-      onZoomStart: onScaleStart,
-      onZoomUpdate: onScaleUpdate,
-      child: CustomPaint(
-        painter: ChartPainter(
-          theme: Theme.of(context),
-          curves: curves,
-          bounds: bounds,
-          controlRadius: controlRadius,
-        ),
-        key: painterKey,
-        child: Container(), // Somehow makes this expand correctly
-      ),
-    );
-  }
-
-  onPanStart(ScaleStartDetails details) {
-    var min = getClosestPoint(details.localFocalPoint.toPoint());
-
-    if (min.distance < dragRadius) {
-      setState(() {
-        selectedPoint =
-            (curveIndex: min.curveIndex, curvePointType: min.pointType);
-      });
-    }
-  }
-
-  onPanUpdate(ScaleUpdateDetails details) {
-    if (selectedPoint == null) return;
-
-    // not adding delta seems to be considerably smoother
-    var newPos = details.localFocalPoint;
-    var painter = getPainter();
-
-    if (!painter.paintBounds.deflate(10.0).contains(newPos)) return;
-
-    var chartSpace =
-        transformPointToChartSpace(newPos.toPoint(), painter.size, bounds);
-
-    setState(() {
-      curves[selectedPoint!.curveIndex][selectedPoint!.curvePointType] =
-          chartSpace;
-    });
-  }
-
-  onPanEnd(ScaleEndDetails details) {
-    setState(() {
-      selectedPoint = null;
-    });
-  }
-
-  onScaleStart(ScaleStartDetails details) {
-    print("hello");
-    setState(() {
-      scaleStartBounds = bounds;
-    });
-  }
-
-  onScaleUpdate(ScaleUpdateDetails details) {
-    var startBoundsWidth = scaleStartBounds!.width;
-    var startBoundsHeight = scaleStartBounds!.height;
-
-    var newWidth = startBoundsHeight / details.horizontalScale;
-    var newHeight = startBoundsWidth / details.verticalScale;
-
-    setState(() {
-      bounds = CartesianRectangle.fromCenter(
-          center: details.localFocalPoint, width: newWidth, height: newHeight);
-    });
-  }
-*/
