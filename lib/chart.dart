@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:slider_app/bounds.dart';
 import 'package:slider_app/custom_gesture_recognizer.dart';
 import 'conversion_extensions.dart';
 
@@ -33,10 +34,12 @@ class _ChartState extends State<Chart> {
     )
   ];
 
-  CartesianRectangle<double>? scaleStartBounds;
-  var bounds = const CartesianRectangle<double>(
-      Point(0, 0), Point(horizontalMax, verticalMax));
-  Point<double>? previousBottomLeft;
+  var bounds = Bounds(
+    maxBounds: const CartesianRectangle<double>(
+      Point(0, 0),
+      Point(horizontalMax, verticalMax),
+    ),
+  );
 
   ({int curveIndex, CurvePointType curvePointType})? selectedPoint;
 
@@ -60,7 +63,7 @@ class _ChartState extends State<Chart> {
           painter: ChartPainter(
             theme: Theme.of(context),
             curves: curves,
-            bounds: bounds,
+            bounds: bounds.rect,
             controlRadius: controlRadius,
           ),
           key: painterKey,
@@ -82,6 +85,7 @@ class _ChartState extends State<Chart> {
   }
 
   onDragUpdate(PointerMoveEvent details) {
+    // TODO: this is a pan
     if (selectedPoint == null) return;
 
     var newPos = details.localPosition;
@@ -90,7 +94,7 @@ class _ChartState extends State<Chart> {
     if (!painter.paintBounds.deflate(10.0).contains(newPos)) return;
 
     var chartSpace =
-        transformPointToChartSpace(newPos.toPoint(), painter.size, bounds);
+        transformPointToChartSpace(newPos.toPoint(), painter.size, bounds.rect);
 
     setState(() {
       curves[selectedPoint!.curveIndex][selectedPoint!.curvePointType] =
@@ -106,31 +110,22 @@ class _ChartState extends State<Chart> {
 
   onScaleStart(PointerPanZoomStartEvent details) {
     setState(() {
-      scaleStartBounds = bounds;
-      previousBottomLeft = bounds.bottomLeft;
+      bounds.startScale();
     });
   }
 
   onScaleUpdate(PointerPanZoomUpdateEvent details) {
-    var startBoundsWidth = scaleStartBounds!.width;
-    var startBoundsHeight = scaleStartBounds!.height;
-
-    var newWidth = startBoundsWidth / details.scale;
-    var newHeight = startBoundsHeight / details.scale;
-
-    // keep focal point in the same place in chart space
-    // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
-    var focalPoint = transformPointToChartSpace(
-        mousePos.toPoint(), getPainter().size, bounds);
-    var startFocalDelta = focalPoint - scaleStartBounds!.bottomLeft;
-    var bottomLeft = Point(
-      focalPoint.x - (startFocalDelta.x / startBoundsWidth * newWidth),
-      focalPoint.y - (startFocalDelta.y / startBoundsHeight * newHeight),
-    );
-
     setState(() {
-      bounds = CartesianRectangle.fromBLWH(
-          bottomLeft: bottomLeft, width: newWidth, height: newHeight);
+      // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
+      var focalPoint = transformPointToChartSpace(
+          mousePos.toPoint(), getPainter().size, bounds.rect);
+      bounds.scale(details.scale, focalPoint);
+    });
+  }
+
+  onScaleEnd(PointerPanZoomEndEvent details) {
+    setState(() {
+      bounds.endScale();
     });
   }
 
@@ -141,8 +136,8 @@ class _ChartState extends State<Chart> {
 
   ({int curveIndex, double distance, CurvePointType pointType}) getClosestPoint(
       Point<double> tapPoint) {
-    var screenSpace = curves
-        .map((e) => transformCurveToScreenSpace(e, getPainter().size, bounds));
+    var screenSpace = curves.map(
+        (e) => transformCurveToScreenSpace(e, getPainter().size, bounds.rect));
     var withIndex = screenSpace.toList().asMap().entries.map((e) => (
           index: e.key,
           curve: e.value,
