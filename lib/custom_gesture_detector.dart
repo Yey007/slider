@@ -7,22 +7,70 @@ import 'package:flutter/material.dart';
 typedef EmptyFunction = void Function();
 typedef Callback<T> = void Function(T);
 
-class CustomGestureRecognizer extends StatefulWidget {
+class DragStartDetails {
+  Offset localPosition;
+  PointerDeviceKind deviceKind;
+
+  DragStartDetails({required this.localPosition, required this.deviceKind});
+}
+
+class DragUpdateDetails {
+  Offset localPosition;
+  PointerDeviceKind deviceKind;
+
+  DragUpdateDetails({required this.localPosition, required this.deviceKind});
+}
+
+class DragEndDetails {
+  Velocity velocity;
+  PointerDeviceKind deviceKind;
+
+  DragEndDetails({required this.velocity, required this.deviceKind});
+}
+
+class PanZoomStartDetails {
+  Offset localPosition;
+  PointerDeviceKind deviceKind;
+
+  PanZoomStartDetails({required this.localPosition, required this.deviceKind});
+}
+
+class PanZoomUpdateDetails {
+  Offset localPosition;
+  Offset pan;
+  double scale;
+  PointerDeviceKind deviceKind;
+
+  PanZoomUpdateDetails(
+      {required this.localPosition,
+      this.pan = Offset.zero,
+      this.scale = 1.0,
+      required this.deviceKind});
+}
+
+// TODO: add velocity?
+class PanZoomEndDetails {
+  PointerDeviceKind deviceKind;
+
+  PanZoomEndDetails({required this.deviceKind});
+}
+
+class CustomGestureDetector extends StatefulWidget {
   final Widget? child;
 
-  final Callback<PointerMoveEvent>? onDragStart;
-  final Callback<PointerMoveEvent>? onDragUpdate;
-  final EmptyFunction? onDragEnd;
+  final Callback<DragStartDetails>? onDragStart;
+  final Callback<DragUpdateDetails>? onDragUpdate;
+  final EmptyFunction? onDragEnd; // TODO: use DragEndDetails
 
-  final Callback<PointerPanZoomStartEvent>? onPanZoomStart;
-  final Callback<PointerPanZoomUpdateEvent>? onPanZoomUpdate;
-  final Callback<PointerPanZoomEndEvent>? onPanZoomEnd;
+  final Callback<PanZoomStartDetails>? onPanZoomStart;
+  final Callback<PanZoomUpdateDetails>? onPanZoomUpdate;
+  final Callback<PanZoomEndDetails>? onPanZoomEnd;
 
   final Duration mouseScrollPanEndDelay;
 
   final double scaleFactor = 200.0;
 
-  const CustomGestureRecognizer(
+  const CustomGestureDetector(
       {super.key,
       this.child,
       this.onDragStart,
@@ -34,11 +82,10 @@ class CustomGestureRecognizer extends StatefulWidget {
       this.mouseScrollPanEndDelay = const Duration(milliseconds: 100)});
 
   @override
-  State<CustomGestureRecognizer> createState() =>
-      _CustomGestureRecognizerState();
+  State<CustomGestureDetector> createState() => _CustomGestureDetectorState();
 }
 
-class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
+class _CustomGestureDetectorState extends State<CustomGestureDetector> {
   int? activePointer;
   RestartableTimer? scrollTimer;
   Offset scrollSum = Offset.zero;
@@ -60,12 +107,18 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
   void _onPointerMove(PointerMoveEvent event) {
     if (event.down) {
       if (activePointer == event.pointer) {
-        widget.onDragUpdate?.call(event);
+        widget.onDragUpdate?.call(DragUpdateDetails(
+          localPosition: event.localPosition,
+          deviceKind: event.kind,
+        ));
       } else if (activePointer == null) {
         setState(() {
           activePointer = event.pointer;
         });
-        widget.onDragStart?.call(event);
+        widget.onDragStart?.call(DragStartDetails(
+          localPosition: event.localPosition,
+          deviceKind: event.kind,
+        ));
       }
     }
   }
@@ -104,29 +157,22 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
 
   void _onMouseScroll(PointerScrollEvent event) {
     // Stole exp formula from flutter themselves
-    _onGenericScroll(
-        event,
-        (event, sum) =>
-            event.copyWith(scale: exp(-sum.dy / widget.scaleFactor)));
+    _onGenericScroll(event,
+        (event, sum) => event..scale = exp(-sum.dy / widget.scaleFactor));
   }
 
   void _onTrackpadScroll(PointerScrollEvent event) {
-    _onGenericScroll(event, (event, sum) => event.copyWith(pan: sum));
+    _onGenericScroll(event, (event, sum) => event..pan = sum);
   }
 
-  void _onGenericScroll(
-      PointerScrollEvent event,
-      PointerPanZoomUpdateEvent Function(PointerPanZoomUpdateEvent, Offset)
-          attachData) {
+  void _onGenericScroll(PointerScrollEvent event,
+      PanZoomUpdateDetails Function(PanZoomUpdateDetails, Offset) attachData) {
     if (activePointer == event.pointer) {
       setState(() {
         scrollSum = scrollSum + event.scrollDelta;
-        var data = PointerPanZoomUpdateEvent(
-          timeStamp: event.timeStamp,
-          device: event.device,
-          pointer: event.pointer,
-          position: event.position,
-          embedderId: event.embedderId,
+        var data = PanZoomUpdateDetails(
+          localPosition: event.localPosition,
+          deviceKind: event.kind,
         );
         widget.onPanZoomUpdate?.call(attachData(data, scrollSum));
         scrollTimer?.reset();
@@ -134,13 +180,7 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
     } else if (activePointer == null) {
       setState(() {
         scrollTimer = RestartableTimer(widget.mouseScrollPanEndDelay, () {
-          widget.onPanZoomEnd?.call(PointerPanZoomEndEvent(
-            timeStamp: event.timeStamp,
-            device: event.device,
-            pointer: event.pointer,
-            position: event.position,
-            embedderId: event.embedderId,
-          ));
+          widget.onPanZoomEnd?.call(PanZoomEndDetails(deviceKind: event.kind));
           setState(() {
             activePointer = null;
             scrollSum = Offset.zero;
@@ -149,12 +189,9 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
         activePointer = event.pointer;
       });
 
-      widget.onPanZoomStart?.call(PointerPanZoomStartEvent(
-        timeStamp: event.timeStamp,
-        device: event.device,
-        pointer: event.pointer,
-        position: event.position,
-        embedderId: event.embedderId,
+      widget.onPanZoomStart?.call(PanZoomStartDetails(
+        localPosition: event.localPosition,
+        deviceKind: event.kind,
       ));
     }
   }
@@ -164,13 +201,25 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
       setState(() {
         activePointer = event.pointer;
       });
-      widget.onPanZoomStart?.call(event);
+      widget.onPanZoomStart?.call(
+        PanZoomStartDetails(
+          localPosition: event.localPosition,
+          deviceKind: event.kind,
+        ),
+      );
     }
   }
 
   void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
     if (activePointer == event.pointer) {
-      widget.onPanZoomUpdate?.call(event);
+      widget.onPanZoomUpdate?.call(
+        PanZoomUpdateDetails(
+          localPosition: event.localPosition,
+          pan: event.pan,
+          scale: event.scale,
+          deviceKind: event.kind,
+        ),
+      );
     }
   }
 
@@ -179,7 +228,11 @@ class _CustomGestureRecognizerState extends State<CustomGestureRecognizer> {
       setState(() {
         activePointer = null;
       });
-      widget.onPanZoomEnd?.call(event);
+      widget.onPanZoomEnd?.call(
+        PanZoomEndDetails(
+          deviceKind: event.kind,
+        ),
+      );
     }
   }
 }

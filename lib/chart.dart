@@ -1,9 +1,8 @@
 import 'dart:math';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:slider_app/bounds.dart';
-import 'package:slider_app/custom_gesture_recognizer.dart';
+import 'bounds.dart';
+import 'custom_gesture_detector.dart' as detector;
 import 'conversion_extensions.dart';
 
 import 'bezier.dart';
@@ -53,12 +52,13 @@ class _ChartState extends State<Chart> {
       onHover: (event) => setState(() {
         mousePos = event.localPosition;
       }),
-      child: CustomGestureRecognizer(
+      child: detector.CustomGestureDetector(
         onDragStart: onDragStart,
         onDragUpdate: onDragUpdate,
         onDragEnd: onDragEnd,
         onPanZoomStart: onScaleStart,
         onPanZoomUpdate: onScaleUpdate,
+        onPanZoomEnd: onScaleEnd,
         child: CustomPaint(
           painter: ChartPainter(
             theme: Theme.of(context),
@@ -73,7 +73,7 @@ class _ChartState extends State<Chart> {
     );
   }
 
-  onDragStart(PointerMoveEvent details) {
+  onDragStart(detector.DragStartDetails details) {
     var min = getClosestPoint(details.localPosition.toPoint());
 
     if (min.distance < dragRadius) {
@@ -84,7 +84,7 @@ class _ChartState extends State<Chart> {
     }
   }
 
-  onDragUpdate(PointerMoveEvent details) {
+  onDragUpdate(detector.DragUpdateDetails details) {
     // TODO: this is a pan
     if (selectedPoint == null) return;
 
@@ -108,13 +108,13 @@ class _ChartState extends State<Chart> {
     });
   }
 
-  onScaleStart(PointerPanZoomStartEvent details) {
+  onScaleStart(detector.PanZoomStartDetails details) {
     setState(() {
       bounds.startScale();
     });
   }
 
-  onScaleUpdate(PointerPanZoomUpdateEvent details) {
+  onScaleUpdate(detector.PanZoomUpdateDetails details) {
     setState(() {
       // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
       var focalPoint = transformPointToChartSpace(
@@ -123,7 +123,7 @@ class _ChartState extends State<Chart> {
     });
   }
 
-  onScaleEnd(PointerPanZoomEndEvent details) {
+  onScaleEnd(detector.PanZoomEndDetails details) {
     setState(() {
       bounds.endScale();
     });
