@@ -1,6 +1,9 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 /// An immutable rectangle using the standard cartesian coordinate system.
+@immutable
 class CartesianRectangle<T extends num> {
   final Point<T> _bottomLeft;
   final Point<T> _topRight;

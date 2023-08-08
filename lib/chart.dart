@@ -110,7 +110,7 @@ class _ChartState extends State<Chart> {
 
   onScaleStart(detector.PanZoomStartDetails details) {
     setState(() {
-      bounds.startScale();
+      bounds = bounds.startScale();
     });
   }
 
@@ -119,13 +119,13 @@ class _ChartState extends State<Chart> {
       // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
       var focalPoint = transformPointToChartSpace(
           mousePos.toPoint(), getPainter().size, bounds.rect);
-      bounds.scale(details.scale, focalPoint);
+      bounds = bounds.scale(details.scale, focalPoint);
     });
   }
 
   onScaleEnd(detector.PanZoomEndDetails details) {
     setState(() {
-      bounds.endScale();
+      bounds = bounds.endScale();
     });
   }
 
