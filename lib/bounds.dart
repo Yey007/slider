@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:slider_app/cartesian_rectangle.dart';
 
 class Bounds {
-  final CartesianRectangle<double> _maxBounds; // TODO: limit zoom
+  final CartesianRectangle<double> _maxBounds;
   CartesianRectangle<double>? _scaleStartBounds;
   CartesianRectangle<double> _currentBounds;
 
@@ -33,8 +33,30 @@ class Bounds {
       focalPoint.y - (startFocalDelta.y / startBoundsHeight * newHeight),
     );
 
-    _currentBounds = CartesianRectangle.fromBLWH(
+    var newBounds = CartesianRectangle.fromBLWH(
         bottomLeft: bottomLeft, width: newWidth, height: newHeight);
+
+    // chop rectangle to fit in max bounds
+    var choppedBottomLeft = newBounds.bottomLeft;
+    var choppedTopRight = newBounds.topRight;
+
+    if (choppedBottomLeft.x < _maxBounds.left) {
+      choppedBottomLeft = Point(_maxBounds.left, choppedBottomLeft.y);
+    }
+
+    if (choppedTopRight.x > _maxBounds.right) {
+      choppedTopRight = Point(_maxBounds.right, choppedTopRight.y);
+    }
+
+    if (choppedBottomLeft.y < _maxBounds.bottom) {
+      choppedBottomLeft = Point(choppedBottomLeft.x, _maxBounds.bottom);
+    }
+
+    if (choppedTopRight.y > _maxBounds.top) {
+      choppedTopRight = Point(choppedTopRight.x, _maxBounds.top);
+    }
+
+    _currentBounds = CartesianRectangle(choppedBottomLeft, choppedTopRight);
   }
 
   void endScale() => _scaleStartBounds = null;
