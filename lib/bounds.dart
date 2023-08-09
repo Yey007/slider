@@ -2,10 +2,6 @@ import 'dart:math';
 
 import 'package:slider_app/cartesian_rectangle.dart';
 
-// TODO: important question. How deep should immutability go? I'm not sure
-// if what we have right now is okay, because it might give a false sense
-// of immutability. If we make Bounds immutable, should we make curves immutable
-// too? Should the entire list of curves be immutable? Sometimes I miss Haskell.
 class Bounds {
   final CartesianRectangle<double> _maxBounds; // TODO: limit zoom
   CartesianRectangle<double>? _scaleStartBounds;
@@ -17,9 +13,9 @@ class Bounds {
 
   CartesianRectangle<double> get rect => _currentBounds;
 
-  Bounds startScale() => this.._scaleStartBounds = _currentBounds;
+  void startScale() => _scaleStartBounds = _currentBounds;
 
-  Bounds scale(double scale, Point<double> focalPoint) {
+  void scale(double scale, Point<double> focalPoint) {
     if (_scaleStartBounds == null) {
       throw Exception('startScale must be called before attempting a scale.');
     }
@@ -38,10 +34,9 @@ class Bounds {
       focalPoint.y - (startFocalDelta.y / startBoundsHeight * newHeight),
     );
 
-    return this
-      .._currentBounds = CartesianRectangle.fromBLWH(
-          bottomLeft: bottomLeft, width: newWidth, height: newHeight);
+    _currentBounds = CartesianRectangle.fromBLWH(
+        bottomLeft: bottomLeft, width: newWidth, height: newHeight);
   }
 
-  Bounds endScale() => this.._scaleStartBounds = null;
+  void endScale() => _scaleStartBounds = null;
 }

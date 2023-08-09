@@ -8,7 +8,7 @@ import 'cartesian_rectangle.dart';
 
 class ChartPainter extends CustomPainter {
   ThemeData theme;
-  List<BezierCurve> curves;
+  Iterable<BezierCurve> curves;
   CartesianRectangle bounds;
   double controlRadius;
 
