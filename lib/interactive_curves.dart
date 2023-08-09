@@ -30,9 +30,9 @@ class InteractiveCurvesList {
     }
   }
 
-  void updateDrag(Point<double> dragPoint) {
+  void continueDrag(Point<double> dragPoint) {
     if (_selectedPoint == null) {
-      throw Exception('A drag must be started before updating it.');
+      throw Exception('startDrag must be called before continuing a drag.');
     }
 
     _curves[_selectedPoint!.curveIndex][_selectedPoint!.pointType] = dragPoint;

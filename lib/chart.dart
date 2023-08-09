@@ -41,10 +41,7 @@ class _ChartState extends State<Chart> {
     ),
   );
 
-  ({int curveIndex, CurvePointType curvePointType})? selectedPoint;
-
   final painterKey = GlobalKey();
-
   Offset mousePos = Offset.zero;
 
   @override
@@ -75,8 +72,9 @@ class _ChartState extends State<Chart> {
   }
 
   onDragStart(detector.DragStartDetails details) {
-    var chartSpace = transformPointToChartSpace(
-        details.localPosition.toPoint(), getPainter().size, bounds.rect);
+    var chartSpace = details.localPosition
+        .toPoint()
+        .toChartSpace(getPainter().size, bounds.rect);
     setState(() {
       interactiveCurves.startDrag(chartSpace);
     });
@@ -88,11 +86,12 @@ class _ChartState extends State<Chart> {
       return;
     }
 
-    var chartSpace = transformPointToChartSpace(
-        details.localPosition.toPoint(), getPainter().size, bounds.rect);
+    var chartSpace = details.localPosition
+        .toPoint()
+        .toChartSpace(getPainter().size, bounds.rect);
 
     setState(() {
-      interactiveCurves.updateDrag(chartSpace);
+      interactiveCurves.continueDrag(chartSpace);
     });
   }
 
@@ -111,9 +110,9 @@ class _ChartState extends State<Chart> {
   onScaleUpdate(detector.PanZoomUpdateDetails details) {
     setState(() {
       // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
-      var focalPoint = transformPointToChartSpace(
-          mousePos.toPoint(), getPainter().size, bounds.rect);
-      bounds.scale(details.scale, focalPoint);
+      var focalPoint =
+          mousePos.toPoint().toChartSpace(getPainter().size, bounds.rect);
+      bounds.continueScale(details.scale, focalPoint);
     });
   }
 

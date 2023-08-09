@@ -15,9 +15,9 @@ class Bounds {
 
   void startScale() => _scaleStartBounds = _currentBounds;
 
-  void scale(double scale, Point<double> focalPoint) {
+  void continueScale(double scale, Point<double> focalPoint) {
     if (_scaleStartBounds == null) {
-      throw Exception('startScale must be called before attempting a scale.');
+      throw Exception('startScale must be called before continuing a scale.');
     }
 
     var startBoundsWidth = _scaleStartBounds!.width;
@@ -27,7 +27,6 @@ class Bounds {
     var newHeight = startBoundsHeight / scale;
 
     // keep focal point in the same place in chart space
-    // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
     var startFocalDelta = focalPoint - _scaleStartBounds!.bottomLeft;
     var bottomLeft = Point(
       focalPoint.x - (startFocalDelta.x / startBoundsWidth * newWidth),

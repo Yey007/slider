@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'cartesian_rectangle.dart';
+import 'conversion_extensions.dart';
 
 class BezierCurve {
   Point<double> start;
@@ -45,6 +46,19 @@ class BezierCurve {
         break;
     }
   }
+
+  BezierCurve toScreenSpace(Size screenSize, CartesianRectangle bounds) {
+    transformPoint(Point<double> point) {
+      return point.toScreenSpace(screenSize, bounds);
+    }
+
+    return BezierCurve(
+      start: transformPoint(start),
+      end: transformPoint(end),
+      controlPoint1: transformPoint(controlPoint1),
+      controlPoint2: transformPoint(controlPoint2),
+    );
+  }
 }
 
 enum CurvePointType {
@@ -52,34 +66,4 @@ enum CurvePointType {
   end,
   controlPoint1,
   controlPoint2,
-}
-
-BezierCurve transformCurveToScreenSpace(
-    BezierCurve curve, Size screenSize, CartesianRectangle bounds) {
-  transformPoint(Point point) {
-    return transformPointToScreenSpace(point, screenSize, bounds);
-  }
-
-  return BezierCurve(
-    start: transformPoint(curve.start),
-    end: transformPoint(curve.end),
-    controlPoint1: transformPoint(curve.controlPoint1),
-    controlPoint2: transformPoint(curve.controlPoint2),
-  );
-}
-
-Point<double> transformPointToScreenSpace(
-    Point point, Size screenSize, CartesianRectangle bounds) {
-  var x = (point.x - bounds.left) * (screenSize.width / bounds.width);
-  var y = screenSize.height -
-      (point.y - bounds.bottom) * (screenSize.height / bounds.height);
-  return Point(x, y);
-}
-
-Point<double> transformPointToChartSpace(
-    Point point, Size screenSize, CartesianRectangle bounds) {
-  var x = point.x * (bounds.width / screenSize.width) + bounds.left;
-  var y = -(point.y - screenSize.height) * (bounds.height / screenSize.height) +
-      bounds.bottom;
-  return Point(x, y);
 }

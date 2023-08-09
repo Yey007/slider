@@ -33,9 +33,7 @@ class ChartPainter extends CustomPainter {
     canvas.drawLine(Offset.zero, origin, mainPaint);
     canvas.drawLine(origin, Offset(size.width, size.height), mainPaint);
 
-    curves = curves
-        .map((c) => transformCurveToScreenSpace(c, size, bounds))
-        .toList();
+    curves = curves.map((c) => c.toScreenSpace(size, bounds)).toList();
 
     for (var curve in curves) {
       drawCurve(curve, canvas, mainPaint);
