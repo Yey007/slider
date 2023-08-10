@@ -8,27 +8,12 @@ class InteractiveCurvesList {
   final List<BezierCurve> _curves;
   CurvePointReference? _selectedPoint;
 
-  final double pointControlRadius;
-
-  InteractiveCurvesList(
-      {required List<BezierCurve> curves, required this.pointControlRadius})
-      : _curves = curves;
+  InteractiveCurvesList({required List<BezierCurve> curves}) : _curves = curves;
 
   bool get dragging => _selectedPoint != null;
   Iterable<BezierCurve> get curves => _curves;
 
-  /// Starts tracking a drag starting at the given point.
-  /// Returns true if the touch point was close enough to a curve point to start
-  /// dragging, and false otherwise.
-  bool startDrag(Point<double> touchPoint) {
-    var closestPoint = _getClosestPoint(touchPoint);
-    if (closestPoint.distance < pointControlRadius) {
-      _selectedPoint = closestPoint.ref;
-      return true;
-    } else {
-      return false;
-    }
-  }
+  void startDrag(CurvePointReference touchPoint) => _selectedPoint = touchPoint;
 
   void continueDrag(Point<double> dragPoint) {
     if (_selectedPoint == null) {
@@ -38,12 +23,9 @@ class InteractiveCurvesList {
     _curves[_selectedPoint!.curveIndex][_selectedPoint!.pointType] = dragPoint;
   }
 
-  void endDrag() {
-    _selectedPoint = null;
-  }
+  void endDrag() => _selectedPoint = null;
 
-  ({CurvePointReference ref, double distance}) _getClosestPoint(
-      Point<double> touchPoint) {
+  CurvePointReference getClosestPoint(Point<double> touchPoint) {
     List<({CurvePointReference ref, double distance})> withDistance = [];
     for (int i = 0; i < _curves.length; i++) {
       var curve = _curves[i];
@@ -54,7 +36,7 @@ class InteractiveCurvesList {
             curveIndex: i,
             pointType: pointType,
           ),
-          distance: distance
+          distance: distance,
         ));
       }
     }
@@ -62,6 +44,9 @@ class InteractiveCurvesList {
     var min = withDistance.reduce((value, element) =>
         value.distance < element.distance ? value : element);
 
-    return min;
+    return min.ref;
   }
+
+  Point<double> operator [](CurvePointReference reference) =>
+      _curves[reference.curveIndex][reference.pointType];
 }

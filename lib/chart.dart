@@ -32,7 +32,7 @@ class _ChartState extends State<Chart> {
       controlPoint2: const Point(0.6, 70),
       end: const Point(1, 80),
     )
-  ], pointControlRadius: dragRadius);
+  ]);
 
   var bounds = Bounds(
     maxBounds: const CartesianRectangle<double>(
@@ -72,12 +72,22 @@ class _ChartState extends State<Chart> {
   }
 
   onDragStart(detector.DragStartDetails details) {
-    var chartSpace = details.localPosition
-        .toPoint()
-        .toChartSpace(getPainter().size, bounds.rect);
-    setState(() {
-      interactiveCurves.startDrag(chartSpace);
-    });
+    var painter = getPainter();
+    var position = details.localPosition.toPoint();
+    var chartSpace = position.toChartSpace(painter.size, bounds.rect);
+
+    var ref = interactiveCurves.getClosestPoint(chartSpace);
+
+    var closestScreenSpace = interactiveCurves[ref].toScreenSpace(
+      painter.size,
+      bounds.rect,
+    );
+
+    if (position.distanceTo(closestScreenSpace) < dragRadius) {
+      setState(() {
+        interactiveCurves.startDrag(ref);
+      });
+    }
   }
 
   onDragUpdate(detector.DragUpdateDetails details) {
