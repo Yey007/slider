@@ -1,5 +1,6 @@
 #include "stepper.hpp"
 #include <TMC2208Stepper.h>
+#include "motor_config.hpp"
 
 #define STEP_PIN 2
 #define DIR_PIN 3
@@ -27,7 +28,7 @@ void setup()
 
   digitalWrite(EN_PIN, LOW); // Enable driver in hardware
 
-  driver.microsteps(256);
+  driver.microsteps(MICROSTEPS);
   driver.push();
 
   uint8_t conn = driver.test_connection();
