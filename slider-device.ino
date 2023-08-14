@@ -1,6 +1,6 @@
-#include "stepper.hpp"
 #include <TMC2208Stepper.h>
 #include "motor_config.hpp"
+#include "bezier.hpp"
 
 #define STEP_PIN 2
 #define DIR_PIN 3
@@ -51,19 +51,6 @@ void loop()
   delayMicroseconds(100);
 }
 
-// void setup()
-// {
-//   Serial.begin(9600);
-//   Serial.println("Hello World!");
-
-//   Stepper stepper(STEP_PIN, DIR_PIN, TX_PIN, RX_PIN);
-//   bool success = stepper.setMicrosteps(MicrostepMode::TWO_FIFTY_SIXTH_STEP);
-
-//   digitalWrite(EN_PIN, LOW);
-
-//   Serial.println(success);
-// }
-
-// void loop()
-// {
-// }
+void run(Bezier curve)
+{
+}

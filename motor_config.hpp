@@ -1,3 +1,5 @@
+#pragma once
+
 const uint8_t NATIVE_STEPS_PER_REVOLUTION = 200; // TODO: Don't remember this
 const uint16_t MICROSTEPS = 256;
 const double MM_PER_REVOLUTION = 24.0; // TODO: Don't remember this
