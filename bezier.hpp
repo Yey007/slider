@@ -1,3 +1,19 @@
+struct Time
+{
+public:
+  static Time fromSeconds(double seconds);
+  static Time fromMilliseconds(uint32_t milliseconds);
+
+  double getSeconds() const;
+  uint32_t getMilliseconds() const;
+
+private:
+  uint32_t milliseconds;
+};
+
+double operator/(const Time &time1, const Time &time2);
+Time operator-(const Time &time1, const Time &time2);
+
 struct Distance
 {
 public:
@@ -21,7 +37,7 @@ struct BezierPoint
 {
 public:
   Distance x;
-  double time;
+  Time time;
 };
 
 struct Bezier
@@ -29,5 +45,5 @@ struct Bezier
 public:
   BezierPoint start, control1, control2, end;
 
-  Distance sample(double time);
+  Distance sample(Time time);
 };
