@@ -1,4 +1,5 @@
 #include "bezier.hpp"
+#include <math.h>
 
 Distance Bezier::sample(Time time)
 {

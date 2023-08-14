@@ -1,4 +1,5 @@
 #include "time.hpp"
+#include "Arduino.h"
 
 Time Time::fromSeconds(double seconds)
 {

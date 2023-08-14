@@ -1,4 +1,5 @@
 #pragma once
+#include <stdint.h>
 
 const uint8_t NATIVE_STEPS_PER_REVOLUTION = 200; // TODO: Don't remember this
 const uint16_t MICROSTEPS = 256;
