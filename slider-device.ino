@@ -1,6 +1,8 @@
 #include <TMC2208Stepper.h>
 #include "motor_config.hpp"
 #include "bezier.hpp"
+#include <stdint.h>
+#include <math.h>
 
 #define STEP_PIN 2
 #define DIR_PIN 3
@@ -51,6 +53,48 @@ void loop()
   delayMicroseconds(100);
 }
 
+uint32_t currentTicks = 0;
+
+// TODO: we should really figure out what we wanna do in terms of torque control.
+// Maybe we should load the profile onto the Arduino or the app or something,
+// so we can check what motions are really possible and what motions are not. Though
+// that might require knowing the load in more detail. We can deal with this later.
 void run(Bezier curve)
 {
+  while (true)
+  {
+    Time now = Time::now();
+
+    if (now > curve.end.time)
+    {
+      return;
+    }
+
+    int64_t targetPosition = curve.sample(now).getMotorTicks();
+    if (abs(targetPosition - currentTicks) > 1)
+    {
+      Serial.println("Can't keep up! More than a tick behind per iteration.");
+    }
+
+    if (targetPosition < currentTicks)
+    {
+      digitalWrite(DIR_PIN, HIGH);
+      // Required delays are on the order of nanoseconds,
+      // so this should be plenty without influencing performance much.
+      delayMicroseconds(1);
+
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(1);
+      digitalWrite(STEP_PIN, LOW);
+    }
+    else if (targetPosition > currentTicks)
+    {
+      digitalWrite(DIR_PIN, LOW);
+      delayMicroseconds(1);
+
+      digitalWrite(STEP_PIN, HIGH);
+      delayMicroseconds(1);
+      digitalWrite(STEP_PIN, LOW);
+    }
+  }
 }

@@ -17,3 +17,5 @@ private:
 
 double operator/(const Time &time1, const Time &time2);
 Time operator-(const Time &time1, const Time &time2);
+bool operator<(const Time &time1, const Time &time2);
+bool operator>(const Time &time1, const Time &time2);
