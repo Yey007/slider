@@ -1,6 +1,8 @@
 #include "time.hpp"
 #include "Arduino.h"
 
+uint32_t Time::baseline = 0;
+
 Time Time::fromSeconds(double seconds)
 {
   Time time;
@@ -18,8 +20,13 @@ Time Time::fromMilliseconds(uint32_t milliseconds)
 Time Time::now()
 {
   Time time;
-  time.milliseconds = millis();
+  time.milliseconds = millis() - baseline;
   return time;
+}
+
+void Time::reset()
+{
+  baseline = millis();
 }
 
 double Time::getSeconds() const
@@ -35,6 +42,11 @@ uint32_t Time::getMilliseconds() const
 double operator/(const Time &time1, const Time &time2)
 {
   return time1.getMilliseconds() / (double)time2.getMilliseconds();
+}
+
+Time operator+(const Time &time1, const Time &time2)
+{
+  return Time::fromMilliseconds(time1.getMilliseconds() + time2.getMilliseconds());
 }
 
 Time operator-(const Time &time1, const Time &time2)

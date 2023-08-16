@@ -45,12 +45,25 @@ void setup()
   Serial.print("DRV_STATUS = 0x");
   driver.DRV_STATUS(&data);
   Serial.println(data, HEX);
+
+  Time::reset();
+  Bezier curve = Bezier(
+      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(0)),
+      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(1000)),
+      BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(2000)),
+      BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(3000)));
+  run(curve);
 }
+
+int steps = 0;
 
 void loop()
 {
-  digitalWrite(STEP_PIN, !digitalRead(STEP_PIN));
-  delayMicroseconds(100);
+  digitalWrite(STEP_PIN, HIGH);
+  delayMicroseconds(1000);
+  digitalWrite(STEP_PIN, LOW);
+  delayMicroseconds(1000);
+  Serial.println(steps++);
 }
 
 uint32_t currentTicks = 0;
@@ -71,6 +84,10 @@ void run(Bezier curve)
     }
 
     int64_t targetPosition = curve.sample(now).getMotorTicks();
+
+    // Serial.print("Target position: ");
+    // Serial.println((int32_t)targetPosition);
+
     if (abs(targetPosition - currentTicks) > 1)
     {
       Serial.println("Can't keep up! More than a tick behind per iteration.");
@@ -81,19 +98,19 @@ void run(Bezier curve)
       digitalWrite(DIR_PIN, HIGH);
       // Required delays are on the order of nanoseconds,
       // so this should be plenty without influencing performance much.
-      delayMicroseconds(1);
+      delayMicroseconds(100);
 
       digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(1);
+      delayMicroseconds(100);
       digitalWrite(STEP_PIN, LOW);
     }
     else if (targetPosition > currentTicks)
     {
       digitalWrite(DIR_PIN, LOW);
-      delayMicroseconds(1);
+      delayMicroseconds(100);
 
       digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(1);
+      delayMicroseconds(100);
       digitalWrite(STEP_PIN, LOW);
     }
   }
