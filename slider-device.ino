@@ -1,8 +1,8 @@
-#include <TMC2208Stepper.h>
 #include "motor_config.hpp"
 #include "bezier.hpp"
 #include <stdint.h>
 #include <math.h>
+#include <TMCStepper.h>
 
 #define STEP_PIN 2
 #define DIR_PIN 3
@@ -10,60 +10,60 @@
 #define RX_PIN 7
 #define TX_PIN 6
 
-TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN);
+#define R_SENSE 0.11f
+
+TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN, R_SENSE);
 
 void setup()
 {
   Serial.begin(115200);
-  driver.beginSerial(115200);
-  // Push at the start of setting up the driver resets the register to default
-  driver.push();
 
   pinMode(EN_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
-  digitalWrite(EN_PIN, HIGH); // Disable driver in hardware
-
-  driver.pdn_disable(true);     // Use PDN/UART pin for communication
-  driver.I_scale_analog(false); // Use internal voltage reference
-  driver.rms_current(500);      // Set driver current 500mA
-  driver.toff(2);               // Enable driver in software
-
+  pinMode(DIR_PIN, OUTPUT);
   digitalWrite(EN_PIN, LOW); // Enable driver in hardware
 
-  driver.microsteps(MICROSTEPS);
-  driver.push();
+  driver.beginSerial(115200); // SW UART drivers
 
-  uint8_t conn = driver.test_connection();
-  Serial.print("Connection: ");
-  Serial.println(conn);
+  driver.begin();          //  SPI: Init CS pins and possible SW SPI pins
+                           // UART: Init SW UART (if selected) with default 115200 baudrate
+  driver.toff(5);          // Enables driver in software
+  driver.rms_current(600); // Set motor RMS current
+  driver.microsteps(128);  // Set microsteps to 1/16th
+
+  driver.en_spreadCycle(false); // Toggle spreadCycle on TMC2208/2209/2224
+  driver.pwm_autoscale(true);   // Needed for stealthChop
 
   uint16_t ms = driver.microsteps();
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
-  uint32_t data = 0;
-  Serial.print("DRV_STATUS = 0x");
-  driver.DRV_STATUS(&data);
-  Serial.println(data, HEX);
+  for (int i = 0; i < 1000; i++)
+  {
+    digitalWrite(STEP_PIN, HIGH);
+    delayMicroseconds(1000);
+    digitalWrite(STEP_PIN, LOW);
+    delayMicroseconds(1000);
+  }
 
-  Time::reset();
-  Bezier curve = Bezier(
-      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(0)),
-      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(1000)),
-      BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(2000)),
-      BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(3000)));
-  run(curve);
+  // Time::reset();
+  // Bezier curve = Bezier(
+  //     BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(0)),
+  //     BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(1000)),
+  //     BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(2000)),
+  //     BezierPoint(Distance::fromMotorTicks(1000), Time::fromMilliseconds(3000)));
+  // run(curve);
 }
 
 int steps = 0;
 
 void loop()
 {
-  digitalWrite(STEP_PIN, HIGH);
-  delayMicroseconds(1000);
-  digitalWrite(STEP_PIN, LOW);
-  delayMicroseconds(1000);
-  Serial.println(steps++);
+  // digitalWrite(STEP_PIN, HIGH);
+  // delayMicroseconds(1000);
+  // digitalWrite(STEP_PIN, LOW);
+  // delayMicroseconds(1000);
+  // Serial.println(steps++);
 }
 
 uint32_t currentTicks = 0;
@@ -84,9 +84,6 @@ void run(Bezier curve)
     }
 
     int64_t targetPosition = curve.sample(now).getMotorTicks();
-
-    // Serial.print("Target position: ");
-    // Serial.println((int32_t)targetPosition);
 
     if (abs(targetPosition - currentTicks) > 1)
     {
