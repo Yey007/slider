@@ -15,7 +15,7 @@ Distance Distance::fromMillimeters(double millimeters)
   return distance;
 }
 
-Distance Distance::fromMotorTicks(uint32_t ticks)
+Distance Distance::fromMotorTicks(double ticks)
 {
   Distance distance;
   distance.motorTicks = ticks;
@@ -32,14 +32,14 @@ double Distance::getMillimeters() const
   return motorTicks / STEPS_PER_MM;
 }
 
-uint32_t Distance::getMotorTicks() const
+double Distance::getMotorTicks() const
 {
   return motorTicks;
 }
 
 Distance operator*(const Distance &distance, double scalar)
 {
-  return Distance::fromMillimeters(distance.getMillimeters() * scalar);
+  return Distance::fromMotorTicks(distance.getMotorTicks() * scalar);
 }
 
 Distance operator*(double scalar, const Distance &distance)
@@ -49,5 +49,5 @@ Distance operator*(double scalar, const Distance &distance)
 
 Distance operator+(const Distance &distance1, const Distance &distance2)
 {
-  return Distance::fromMillimeters(distance1.getMillimeters() + distance2.getMillimeters());
+  return Distance::fromMotorTicks(distance1.getMotorTicks() + distance2.getMotorTicks());
 }

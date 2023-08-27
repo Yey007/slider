@@ -5,14 +5,14 @@ struct Distance
 public:
   static Distance fromCentimeters(double centimeters);
   static Distance fromMillimeters(double millimeters);
-  static Distance fromMotorTicks(uint32_t ticks);
+  static Distance fromMotorTicks(double ticks);
 
   double getCentimeters() const;
   double getMillimeters() const;
-  uint32_t getMotorTicks() const;
+  double getMotorTicks() const;
 
 private:
-  uint32_t motorTicks;
+  double motorTicks;
 };
 
 Distance operator*(const Distance &distance, double scalar);

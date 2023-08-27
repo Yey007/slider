@@ -40,8 +40,8 @@ void setup()
 
   Time::reset();
   Bezier curve = Bezier(
-      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(0)),
-      BezierPoint(Distance::fromMotorTicks(0), Time::fromMilliseconds(1000)),
+      BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
+      BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(1000)),
       BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(2000)),
       BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
   run(curve);
@@ -79,14 +79,8 @@ void run(Bezier curve)
       // TODO: It seems like we can't generate step pulses fast enough to keep up with basic curves.
       // We need to optimize, reduce microsteps, or figure something else out.
 
-      // Serial.println("Can't keep up! More than a tick behind per iteration.");
+      Serial.println("Can't keep up! More than a tick behind per iteration.");
     }
-
-    // Serial.print("Target position: ");
-    // Serial.print(targetPosition);
-    // Serial.print(" (");
-    // Serial.print(targetPositionMm);
-    // Serial.println(" mm)");
 
     if (targetPosition < currentTicks)
     {
