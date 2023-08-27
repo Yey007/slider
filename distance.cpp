@@ -4,37 +4,37 @@
 Distance Distance::fromCentimeters(double centimeters)
 {
   Distance distance;
-  distance.millimeters = centimeters * 10;
+  distance.motorTicks = centimeters * 10 * STEPS_PER_MM;
   return distance;
 }
 
-Distance Distance::fromMillimeters(uint32_t millimeters)
+Distance Distance::fromMillimeters(double millimeters)
 {
   Distance distance;
-  distance.millimeters = millimeters;
+  distance.motorTicks = millimeters * STEPS_PER_MM;
   return distance;
 }
 
 Distance Distance::fromMotorTicks(uint32_t ticks)
 {
   Distance distance;
-  distance.millimeters = MM_PER_STEP * ticks;
+  distance.motorTicks = ticks;
   return distance;
 }
 
 double Distance::getCentimeters() const
 {
-  return millimeters / 10.0;
+  return motorTicks / STEPS_PER_MM / 10.0;
 }
 
-uint32_t Distance::getMillimeters() const
+double Distance::getMillimeters() const
 {
-  return millimeters;
+  return motorTicks / STEPS_PER_MM;
 }
 
 uint32_t Distance::getMotorTicks() const
 {
-  return millimeters / MM_PER_STEP;
+  return motorTicks;
 }
 
 Distance operator*(const Distance &distance, double scalar)
