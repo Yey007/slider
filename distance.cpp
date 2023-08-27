@@ -1,48 +1,48 @@
 #include "distance.hpp"
 #include "motor_config.hpp"
 
-Distance Distance::fromCentimeters(double centimeters)
+Distance Distance::fromCentimeters(float centimeters)
 {
   Distance distance;
   distance.motorTicks = centimeters * 10 * STEPS_PER_MM;
   return distance;
 }
 
-Distance Distance::fromMillimeters(double millimeters)
+Distance Distance::fromMillimeters(float millimeters)
 {
   Distance distance;
   distance.motorTicks = millimeters * STEPS_PER_MM;
   return distance;
 }
 
-Distance Distance::fromMotorTicks(double ticks)
+Distance Distance::fromMotorTicks(float ticks)
 {
   Distance distance;
   distance.motorTicks = ticks;
   return distance;
 }
 
-double Distance::getCentimeters() const
+float Distance::getCentimeters() const
 {
   return motorTicks / STEPS_PER_MM / 10.0;
 }
 
-double Distance::getMillimeters() const
+float Distance::getMillimeters() const
 {
   return motorTicks / STEPS_PER_MM;
 }
 
-double Distance::getMotorTicks() const
+float Distance::getMotorTicks() const
 {
   return motorTicks;
 }
 
-Distance operator*(const Distance &distance, double scalar)
+Distance operator*(const Distance &distance, float scalar)
 {
   return Distance::fromMotorTicks(distance.getMotorTicks() * scalar);
 }
 
-Distance operator*(double scalar, const Distance &distance)
+Distance operator*(float scalar, const Distance &distance)
 {
   return distance * scalar;
 }

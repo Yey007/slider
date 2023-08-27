@@ -63,6 +63,7 @@ void run(Bezier curve)
 {
   while (true)
   {
+    uint64_t _start = micros();
     Time now = Time::now();
 
     if (now > curve.end.time)
@@ -72,7 +73,6 @@ void run(Bezier curve)
 
     Distance sample = curve.sample(now);
     uint32_t targetPosition = sample.getMotorTicks();
-    double targetPositionMm = sample.getMillimeters();
 
     if (abs(targetPosition - currentTicks) > 1)
     {
@@ -84,13 +84,11 @@ void run(Bezier curve)
 
     if (targetPosition < currentTicks)
     {
-      digitalWrite(DIR_PIN, HIGH);
       // Required delays are on the order of nanoseconds,
-      // so this should be plenty without influencing performance much.
-      delayMicroseconds(1);
+      // and digitalWrite is on the order of microseconds.
+      digitalWrite(DIR_PIN, HIGH);
 
       digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(1);
       digitalWrite(STEP_PIN, LOW);
 
       currentTicks--;
@@ -98,13 +96,17 @@ void run(Bezier curve)
     else if (targetPosition > currentTicks)
     {
       digitalWrite(DIR_PIN, LOW);
-      delayMicroseconds(1);
 
       digitalWrite(STEP_PIN, HIGH);
-      delayMicroseconds(1);
       digitalWrite(STEP_PIN, LOW);
 
       currentTicks++;
     }
+
+    uint64_t _end = micros();
+    // Serial.print((long)(_end - _start));
+    // Serial.print("us, ");
+    // Serial.print("Target position: ");
+    // Serial.println(targetPosition);
   }
 }

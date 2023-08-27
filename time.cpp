@@ -3,7 +3,7 @@
 
 uint32_t Time::baseline = 0;
 
-Time Time::fromSeconds(double seconds)
+Time Time::fromSeconds(float seconds)
 {
   Time time;
   time.milliseconds = seconds * 1000;
@@ -29,7 +29,7 @@ void Time::reset()
   baseline = millis();
 }
 
-double Time::getSeconds() const
+float Time::getSeconds() const
 {
   return milliseconds / 1000.0;
 }
@@ -39,9 +39,9 @@ uint32_t Time::getMilliseconds() const
   return milliseconds;
 }
 
-double operator/(const Time &time1, const Time &time2)
+float operator/(const Time &time1, const Time &time2)
 {
-  return time1.getMilliseconds() / (double)time2.getMilliseconds();
+  return time1.getMilliseconds() / (float)time2.getMilliseconds();
 }
 
 Time operator+(const Time &time1, const Time &time2)

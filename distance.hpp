@@ -3,18 +3,18 @@
 struct Distance
 {
 public:
-  static Distance fromCentimeters(double centimeters);
-  static Distance fromMillimeters(double millimeters);
-  static Distance fromMotorTicks(double ticks);
+  static Distance fromCentimeters(float centimeters);
+  static Distance fromMillimeters(float millimeters);
+  static Distance fromMotorTicks(float ticks);
 
-  double getCentimeters() const;
-  double getMillimeters() const;
-  double getMotorTicks() const;
+  float getCentimeters() const;
+  float getMillimeters() const;
+  float getMotorTicks() const;
 
 private:
-  double motorTicks;
+  float motorTicks;
 };
 
-Distance operator*(const Distance &distance, double scalar);
-Distance operator*(double scalar, const Distance &distance);
+Distance operator*(const Distance &distance, float scalar);
+Distance operator*(float scalar, const Distance &distance);
 Distance operator+(const Distance &distance1, const Distance &distance2);

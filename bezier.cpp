@@ -1,10 +1,18 @@
 #include "bezier.hpp"
-#include <math.h>
+#include "Arduino.h"
 
 Distance Bezier::sample(Time time)
 {
+  // TODO: performance issue here. Bulk of time spent on calculation.
   Time minTime = start.time;
   Time maxTime = end.time;
-  double t = (time - minTime) / (maxTime - minTime);
-  return pow(1 - t, 3) * start.x + 3 * pow(1 - t, 2) * t * control1.x + 3 * (1 - t) * pow(t, 2) * control2.x + pow(t, 3) * end.x;
+  float t = (time - minTime) / (maxTime - minTime);
+
+  float coef1 = (1 - t) * (1 - t) * (1 - t);
+  float coef2 = 3 * (1 - t) * (1 - t) * t;
+  float coef3 = 3 * (1 - t) * t * t;
+  float coef4 = t * t * t;
+  Distance result = coef1 * start.x + coef2 * control1.x + coef3 * control2.x + coef4 * end.x;
+
+  return result;
 }
