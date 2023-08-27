@@ -34,6 +34,8 @@ void setup()
   driver.en_spreadCycle(false); // Toggle spreadCycle on TMC2208/2209/2224
   driver.pwm_autoscale(true);   // Needed for stealthChop
 
+  driver.dedge(true);
+
   uint16_t ms = driver.microsteps();
   Serial.print("Microsteps: ");
   Serial.println(ms);
@@ -54,6 +56,7 @@ void loop()
 }
 
 int64_t currentTicks = 0;
+bool currentStep = LOW;
 
 // TODO: we should really figure out what we wanna do in terms of torque control.
 // Maybe we should load the profile onto the Arduino or the app or something,
@@ -63,7 +66,7 @@ void run(Bezier curve)
 {
   while (true)
   {
-    uint64_t _start = micros();
+    // uint64_t _start = micros();
     Time now = Time::now();
 
     if (now > curve.end.time)
@@ -79,31 +82,21 @@ void run(Bezier curve)
       // TODO: It seems like we can't generate step pulses fast enough to keep up with basic curves.
       // We need to optimize, reduce microsteps, or figure something else out.
 
-      Serial.println("Can't keep up! More than a tick behind per iteration.");
+      // Serial.println("Can't keep up! More than a tick behind per iteration.");
     }
 
-    if (targetPosition < currentTicks)
-    {
-      // Required delays are on the order of nanoseconds,
-      // and digitalWrite is on the order of microseconds.
-      digitalWrite(DIR_PIN, HIGH);
+    bool reverse = targetPosition < currentTicks;
 
-      digitalWrite(STEP_PIN, HIGH);
-      digitalWrite(STEP_PIN, LOW);
+    // Required delays are on the order of nanoseconds,
+    // and digitalWrite is on the order of microseconds.
+    digitalWrite(DIR_PIN, reverse);
 
-      currentTicks--;
-    }
-    else if (targetPosition > currentTicks)
-    {
-      digitalWrite(DIR_PIN, LOW);
+    currentStep = !currentStep;
+    digitalWrite(STEP_PIN, currentStep);
 
-      digitalWrite(STEP_PIN, HIGH);
-      digitalWrite(STEP_PIN, LOW);
+    currentTicks += reverse ? -1 : 1;
 
-      currentTicks++;
-    }
-
-    uint64_t _end = micros();
+    // uint64_t _end = micros();
     // Serial.print((long)(_end - _start));
     // Serial.print("us, ");
     // Serial.print("Target position: ");
