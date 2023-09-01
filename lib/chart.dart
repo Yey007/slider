@@ -87,28 +87,40 @@ class _ChartState extends State<Chart> {
       setState(() {
         interactiveCurves.startDrag(ref);
       });
+    } else {
+      setState(() {
+        bounds.startPan(chartSpace);
+      });
     }
   }
 
   onDragUpdate(detector.DragUpdateDetails details) {
-    // TODO: this is a pan
-    if (!interactiveCurves.dragging) {
-      return;
-    }
-
     var chartSpace = details.localPosition
         .toPoint()
         .toChartSpace(getPainter().size, bounds.rect);
 
-    setState(() {
-      interactiveCurves.continueDrag(chartSpace);
-    });
+    if (interactiveCurves.dragging) {
+      setState(() {
+        interactiveCurves.continueDrag(chartSpace);
+      });
+    } else {
+      // print(chartSpace);
+      setState(() {
+        bounds.continuePan(chartSpace);
+      });
+    }
   }
 
   onDragEnd() {
-    setState(() {
-      interactiveCurves.endDrag();
-    });
+    if (interactiveCurves.dragging) {
+      setState(() {
+        interactiveCurves.endDrag();
+      });
+    } else {
+      setState(() {
+        bounds.endPan();
+      });
+    }
   }
 
   onScaleStart(detector.PanZoomStartDetails details) {

@@ -7,6 +7,8 @@ class Bounds {
   CartesianRectangle<double>? _scaleStartBounds;
   CartesianRectangle<double> _currentBounds;
 
+  Point<double>? _previousFocalPoint;
+
   Bounds({required CartesianRectangle<double> maxBounds})
       : _maxBounds = maxBounds,
         _currentBounds = maxBounds;
@@ -36,9 +38,30 @@ class Bounds {
     var newBounds = CartesianRectangle.fromBLWH(
         bottomLeft: bottomLeft, width: newWidth, height: newHeight);
 
-    // chop rectangle to fit in max bounds
-    var choppedBottomLeft = newBounds.bottomLeft;
-    var choppedTopRight = newBounds.topRight;
+    _currentBounds = _chopBounds(newBounds);
+    _previousFocalPoint = focalPoint;
+  }
+
+  void endScale() => _scaleStartBounds = null;
+
+  void startPan(Point<double> touchPoint) => _previousFocalPoint = touchPoint;
+
+  void continuePan(Point<double> touchPoint) {
+    var delta = touchPoint - _previousFocalPoint!;
+
+    var newBottomLeft = _currentBounds.bottomLeft - delta;
+    _currentBounds = CartesianRectangle.fromBLWH(
+      bottomLeft: newBottomLeft,
+      width: _currentBounds.width,
+      height: _currentBounds.height,
+    );
+  }
+
+  void endPan() => _previousFocalPoint = null;
+
+  CartesianRectangle<double> _chopBounds(CartesianRectangle<double> bounds) {
+    var choppedBottomLeft = bounds.bottomLeft;
+    var choppedTopRight = bounds.topRight;
 
     if (choppedBottomLeft.x < _maxBounds.left) {
       choppedBottomLeft = Point(_maxBounds.left, choppedBottomLeft.y);
@@ -56,8 +79,6 @@ class Bounds {
       choppedTopRight = Point(choppedTopRight.x, _maxBounds.top);
     }
 
-    _currentBounds = CartesianRectangle(choppedBottomLeft, choppedTopRight);
+    return CartesianRectangle(choppedBottomLeft, choppedTopRight);
   }
-
-  void endScale() => _scaleStartBounds = null;
 }
