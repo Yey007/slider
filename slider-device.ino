@@ -25,27 +25,29 @@ void setup()
 
   driver.beginSerial(115200); // SW UART drivers
 
-  driver.begin();                //  SPI: Init CS pins and possible SW SPI pins
-                                 // UART: Init SW UART (if selected) with default 115200 baudrate
-  driver.toff(5);                // Enables driver in software
-  driver.rms_current(600);       // Set motor RMS current
-  driver.microsteps(MICROSTEPS); // Set microsteps to 1/16th
+  driver.begin(); //  SPI: Init CS pins and possible SW SPI pins
+                  // UART: Init SW UART (if selected) with default 115200 baudrate
+  driver.toff(5); // Enables driver in software
+  driver.rms_current(1800);
+  driver.microsteps(MICROSTEPS == 1 ? 0 : MICROSTEPS); // Weird API makes this ugly
 
   driver.en_spreadCycle(false); // Toggle spreadCycle on TMC2208/2209/2224
   driver.pwm_autoscale(true);   // Needed for stealthChop
 
-  driver.dedge(true);
+  driver.dedge(true); // double edge
 
   uint16_t ms = driver.microsteps();
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
   Time::reset();
+
   Bezier curve = Bezier(
       BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
       BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(1000)),
       BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(2000)),
       BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
+
   run(curve);
 }
 
@@ -57,6 +59,7 @@ void loop()
 
 int64_t currentTicks = 0;
 bool currentStep = LOW;
+bool previousReverse = false;
 
 // TODO: we should really figure out what we wanna do in terms of torque control.
 // Maybe we should load the profile onto the Arduino or the app or something,
@@ -66,7 +69,7 @@ void run(Bezier curve)
 {
   while (true)
   {
-    // uint64_t _start = micros();
+    uint64_t _start = micros();
     Time now = Time::now();
 
     if (now > curve.end.time)
@@ -81,25 +84,30 @@ void run(Bezier curve)
     {
       // TODO: It seems like we can't generate step pulses fast enough to keep up with basic curves.
       // We need to optimize, reduce microsteps, or figure something else out.
+      // Ideas for optimization: lookup table instead of on the fly curve computation (most likely to help, but there may be memory restrictions)
+      // PWM for pulse generation? Frequency is a constant 980Hz tho so will that work?
 
       // Serial.println("Can't keep up! More than a tick behind per iteration.");
     }
 
     bool reverse = targetPosition < currentTicks;
-
-    // Required delays are on the order of nanoseconds,
-    // and digitalWrite is on the order of microseconds.
-    digitalWrite(DIR_PIN, reverse);
+    if (reverse != previousReverse)
+    {
+      // Required delays are on the order of nanoseconds,
+      // and digitalWrite is on the order of microseconds.
+      digitalWrite(DIR_PIN, reverse);
+    }
+    previousReverse = reverse;
 
     currentStep = !currentStep;
     digitalWrite(STEP_PIN, currentStep);
 
     currentTicks += reverse ? -1 : 1;
 
-    // uint64_t _end = micros();
-    // Serial.print((long)(_end - _start));
-    // Serial.print("us, ");
-    // Serial.print("Target position: ");
-    // Serial.println(targetPosition);
+    uint64_t _end = micros();
+    Serial.print((long)(_end - _start));
+    Serial.print("us, ");
+    Serial.print("Target position: ");
+    Serial.println(targetPosition);
   }
 }
