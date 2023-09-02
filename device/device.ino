@@ -28,7 +28,7 @@ void setup()
   driver.begin(); //  SPI: Init CS pins and possible SW SPI pins
                   // UART: Init SW UART (if selected) with default 115200 baudrate
   driver.toff(5); // Enables driver in software
-  driver.rms_current(1800);
+  driver.rms_current(600);
   driver.microsteps(MICROSTEPS == 1 ? 0 : MICROSTEPS); // Weird API makes this ugly
 
   driver.en_spreadCycle(false); // Toggle spreadCycle on TMC2208/2209/2224
@@ -69,7 +69,6 @@ void run(Bezier curve)
 {
   while (true)
   {
-    uint64_t _start = micros();
     Time now = Time::now();
 
     if (now > curve.end.time)
@@ -91,23 +90,11 @@ void run(Bezier curve)
     }
 
     bool reverse = targetPosition < currentTicks;
-    if (reverse != previousReverse)
-    {
-      // Required delays are on the order of nanoseconds,
-      // and digitalWrite is on the order of microseconds.
-      digitalWrite(DIR_PIN, reverse);
-    }
-    previousReverse = reverse;
+    digitalWrite(DIR_PIN, reverse);
 
     currentStep = !currentStep;
     digitalWrite(STEP_PIN, currentStep);
 
     currentTicks += reverse ? -1 : 1;
-
-    uint64_t _end = micros();
-    Serial.print((long)(_end - _start));
-    Serial.print("us, ");
-    Serial.print("Target position: ");
-    Serial.println(targetPosition);
   }
 }

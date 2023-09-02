@@ -1,6 +1,6 @@
 #pragma once
-#include "time.hpp"
-#include "distance.hpp"
+#include "measures/time.hpp"
+#include "measures/distance.hpp"
 
 struct BezierPoint
 {
