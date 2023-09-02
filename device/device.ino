@@ -1,4 +1,5 @@
 #include "motor_config.hpp"
+#include "src/measures/time.hpp"
 #include "bezier.hpp"
 #include <stdint.h>
 #include <math.h>
@@ -10,7 +11,7 @@
 #define RX_PIN 7
 #define TX_PIN 6
 
-#define R_SENSE 0.11f
+#define R_SENSE 0.15f
 
 TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN, R_SENSE);
 
@@ -31,8 +32,7 @@ void setup()
   driver.rms_current(600);
   driver.microsteps(MICROSTEPS == 1 ? 0 : MICROSTEPS); // Weird API makes this ugly
 
-  driver.en_spreadCycle(false); // Toggle spreadCycle on TMC2208/2209/2224
-  driver.pwm_autoscale(true);   // Needed for stealthChop
+  driver.pwm_autoscale(true); // Needed for stealthChop
 
   driver.dedge(true); // double edge
 
@@ -40,18 +40,19 @@ void setup()
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
-  Time::reset();
+  // TODO: figure out why vactual < 2000 doesn't spin the motor at all (maybe to do with current?)
+  driver.VACTUAL(0);
 
-  Bezier curve = Bezier(
-      BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
-      BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(1000)),
-      BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(2000)),
-      BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
+  // Time::reset();
 
-  run(curve);
+  // Bezier curve = Bezier(
+  //     BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
+  //     BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(1000)),
+  //     BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(2000)),
+  //     BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
+
+  // run(curve);
 }
-
-int steps = 0;
 
 void loop()
 {

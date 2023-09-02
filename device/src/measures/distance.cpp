@@ -1,5 +1,5 @@
 #include "distance.hpp"
-#include "../motor_config.hpp"
+#include "../../motor_config.hpp"
 
 Distance Distance::fromCentimeters(float centimeters)
 {

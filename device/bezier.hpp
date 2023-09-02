@@ -1,6 +1,7 @@
 #pragma once
-#include "measures/time.hpp"
-#include "measures/distance.hpp"
+#include "src/measures/time.hpp"
+#include "src/measures/distance.hpp"
+#include "src/measures/velocity.hpp"
 
 struct BezierPoint
 {
@@ -19,4 +20,5 @@ public:
   BezierPoint start, control1, control2, end;
 
   Distance sample(Time time);
+  Velocity sampleVelocity(Time time);
 };
