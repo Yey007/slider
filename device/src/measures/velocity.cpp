@@ -5,9 +5,9 @@ Velocity::Velocity(Distance distance, Time time)
 {
 }
 
-float Velocity::getMotorTicksPerSecond() const
+float Velocity::toMicrostepsPerSecond() const
 {
-  return distance.getMotorTicks() / time.getSeconds();
+  return distance.toMicrosteps() / time.toSeconds();
 }
 
 Velocity operator/(const Distance &distance, const Time &time)

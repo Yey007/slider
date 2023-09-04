@@ -7,7 +7,7 @@ struct Velocity
 public:
   Velocity(Distance distance, Time time);
 
-  float getMotorTicksPerSecond() const;
+  float toMicrostepsPerSecond() const;
 
 private:
   Distance distance;

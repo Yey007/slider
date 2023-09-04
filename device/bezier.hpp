@@ -21,4 +21,7 @@ public:
 
   Distance sample(Time time);
   Velocity sampleVelocity(Time time);
+
+private:
+  float getT(Time time);
 };

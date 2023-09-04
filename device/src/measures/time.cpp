@@ -1,7 +1,7 @@
 #include "time.hpp"
 #include "Arduino.h"
 
-uint32_t Time::baseline = 0;
+float Time::baseline = 0;
 
 Time Time::fromSeconds(float seconds)
 {
@@ -10,7 +10,7 @@ Time Time::fromSeconds(float seconds)
   return time;
 }
 
-Time Time::fromMilliseconds(uint32_t milliseconds)
+Time Time::fromMilliseconds(float milliseconds)
 {
   Time time;
   time.milliseconds = milliseconds;
@@ -29,42 +29,47 @@ void Time::reset()
   baseline = millis();
 }
 
-float Time::getSeconds() const
+float Time::toSeconds() const
 {
   return milliseconds / 1000.0;
 }
 
-uint32_t Time::getMilliseconds() const
+float Time::toMilliseconds() const
 {
   return milliseconds;
 }
 
 float operator/(const Time &time1, const Time &time2)
 {
-  return time1.getMilliseconds() / (float)time2.getMilliseconds();
+  return time1.toMilliseconds() / (float)time2.toMilliseconds();
 }
 
 Time operator+(const Time &time1, const Time &time2)
 {
-  return Time::fromMilliseconds(time1.getMilliseconds() + time2.getMilliseconds());
+  return Time::fromMilliseconds(time1.toMilliseconds() + time2.toMilliseconds());
 }
 
 Time operator-(const Time &time1, const Time &time2)
 {
-  if (time1 < time2)
-  {
-    Serial.println("Subtracting times out of order. This is not good!");
-  }
+  return Time::fromMilliseconds(time1.toMilliseconds() - time2.toMilliseconds());
+}
 
-  return Time::fromMilliseconds(time1.getMilliseconds() - time2.getMilliseconds());
+Time operator*(const Time &time, float scalar)
+{
+  return Time::fromMilliseconds(time.toMilliseconds() * scalar);
+}
+
+Time operator*(float scalar, const Time &time)
+{
+  return time * scalar;
 }
 
 bool operator<(const Time &time1, const Time &time2)
 {
-  return time1.getMilliseconds() < time2.getMilliseconds();
+  return time1.toMilliseconds() < time2.toMilliseconds();
 }
 
 bool operator>(const Time &time1, const Time &time2)
 {
-  return time1.getMilliseconds() > time2.getMilliseconds();
+  return time1.toMilliseconds() > time2.toMilliseconds();
 }

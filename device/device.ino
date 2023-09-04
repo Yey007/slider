@@ -58,6 +58,23 @@ void loop()
 {
 }
 
+void runVelocity(Bezier curve)
+{
+  while (true)
+  {
+    Time now = Time::now();
+
+    if (now > curve.end.time)
+    {
+      return;
+    }
+
+    Velocity velocity = curve.sampleVelocity(now);
+
+    driver.VACTUAL(velocity.toMicrostepsPerSecond());
+  }
+}
+
 int64_t currentTicks = 0;
 bool currentStep = LOW;
 bool previousReverse = false;
@@ -78,7 +95,7 @@ void run(Bezier curve)
     }
 
     Distance sample = curve.sample(now);
-    uint32_t targetPosition = sample.getMotorTicks();
+    uint32_t targetPosition = sample.toMicrosteps();
 
     if (abs(targetPosition - currentTicks) > 1)
     {

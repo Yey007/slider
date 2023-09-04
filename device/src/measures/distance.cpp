@@ -4,42 +4,42 @@
 Distance Distance::fromCentimeters(float centimeters)
 {
   Distance distance;
-  distance.motorTicks = centimeters * 10 * STEPS_PER_MM;
+  distance.microsteps = centimeters * 10 * STEPS_PER_MM;
   return distance;
 }
 
 Distance Distance::fromMillimeters(float millimeters)
 {
   Distance distance;
-  distance.motorTicks = millimeters * STEPS_PER_MM;
+  distance.microsteps = millimeters * STEPS_PER_MM;
   return distance;
 }
 
-Distance Distance::fromMotorTicks(float ticks)
+Distance Distance::fromMicrosteps(float ticks)
 {
   Distance distance;
-  distance.motorTicks = ticks;
+  distance.microsteps = ticks;
   return distance;
 }
 
-float Distance::getCentimeters() const
+float Distance::toCentimeters() const
 {
-  return motorTicks / STEPS_PER_MM / 10.0;
+  return microsteps / STEPS_PER_MM / 10.0;
 }
 
-float Distance::getMillimeters() const
+float Distance::toMillimeters() const
 {
-  return motorTicks / STEPS_PER_MM;
+  return microsteps / STEPS_PER_MM;
 }
 
-float Distance::getMotorTicks() const
+float Distance::toMicrosteps() const
 {
-  return motorTicks;
+  return microsteps;
 }
 
 Distance operator*(const Distance &distance, float scalar)
 {
-  return Distance::fromMotorTicks(distance.getMotorTicks() * scalar);
+  return Distance::fromMicrosteps(distance.toMicrosteps() * scalar);
 }
 
 Distance operator*(float scalar, const Distance &distance)
@@ -49,5 +49,10 @@ Distance operator*(float scalar, const Distance &distance)
 
 Distance operator+(const Distance &distance1, const Distance &distance2)
 {
-  return Distance::fromMotorTicks(distance1.getMotorTicks() + distance2.getMotorTicks());
+  return Distance::fromMicrosteps(distance1.toMicrosteps() + distance2.toMicrosteps());
+}
+
+Distance operator-(const Distance &distance1, const Distance &distance2)
+{
+  return Distance::fromMicrosteps(distance1.toMicrosteps() - distance2.toMicrosteps());
 }
