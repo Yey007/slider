@@ -77,6 +77,27 @@ void loop()
 {
 }
 
+void auto_tune()
+{
+  uint8_t ihold_before = driver.ihold();
+  uint8_t irun_before = driver.irun();
+
+  // temporarily set ihold and irun to max for tuning
+  delay(100); // wait for auto tuning step 1 (standstill) to complete
+
+  // TODO: probably replace with a bezier curve or velocity control once we know everything is working
+  bool currentStep = LOW;
+  int currentDelay = 1000;
+  while (currentDelay <= 1000)
+  {
+    digitalWrite(STEP_PIN, currentStep);
+    currentStep = !currentStep;
+    delayMicroseconds(currentDelay);
+    // min delay of 1, ramp up then down
+    currentDelay = currentDelay >= 1 ? currentDelay - 1 : currentDelay + 1;
+  }
+}
+
 void runVelocity(Bezier curve)
 {
   while (true)
@@ -90,7 +111,7 @@ void runVelocity(Bezier curve)
 
     Velocity velocity = curve.sampleVelocity(now);
 
-    driver.VACTUAL(velocity.toMicrostepsPerSecond());
+    driver.VACTUAL(velocity.toMicrostepsPerSecond()); // TODO: bad computation, needs conversion
   }
 }
 
