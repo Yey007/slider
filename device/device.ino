@@ -11,7 +11,7 @@
 #define RX_PIN 7
 #define TX_PIN 6
 
-#define R_SENSE 0.15f
+#define R_SENSE 0.15f // Not certain what this should be
 
 TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN, R_SENSE);
 
@@ -24,24 +24,43 @@ void setup()
   pinMode(DIR_PIN, OUTPUT);
   digitalWrite(EN_PIN, LOW); // Enable driver in hardware
 
-  driver.beginSerial(115200); // SW UART drivers
+  driver.beginSerial(115200); // Software UART drivers
 
-  driver.begin(); //  SPI: Init CS pins and possible SW SPI pins
-                  // UART: Init SW UART (if selected) with default 115200 baudrate
-  driver.toff(5); // Enables driver in software
-  driver.rms_current(600);
-  driver.microsteps(MICROSTEPS == 1 ? 0 : MICROSTEPS); // Weird API makes this ugly
+  driver.begin(); // enables uart interface and sets driver to use register microsteps
+  driver.toff(1); // Enables driver in software (can be any value except 0 for StealthChop)
 
-  driver.pwm_autoscale(true); // Needed for stealthChop
+  driver.internal_Rsense(true); // use internal sense resistors
+  driver.rms_current(900, 0.2); // automatically calculates irun and ihold based on rms current and hold multiplier
+  driver.iholddelay(10);        // some ramp down time to hold current (view docs for time calculation)
+  driver.TPOWERDOWN(255);       // some time until ramp down begins (view docs for time calculation, this is around 5.6 seconds)
+  driver.vsense(false);         // full voltage
 
-  driver.dedge(true); // double edge
+  driver.en_spreadCycle(false); // use StealthChop
+
+  driver.pwm_autoscale(true); // automatic motor voltage scaling based on tuning run. Can be switched to velocity based voltage scaling.
+  driver.pwm_autograd(true);  // automatic motor voltage ramp up based on tuning run. Need to be switched off for velocity based scaling?
+
+  driver.tbl(2); // not really sure what this does but recommended for most applications
+
+  driver.microsteps(MICROSTEPS == 1 ? 0 : MICROSTEPS);
+  driver.dedge(true); // double edge steps
+
+  driver.push(); // push any settings to driver. shouldn't be required but I'm just being safe.
 
   uint16_t ms = driver.microsteps();
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
   // TODO: figure out why vactual < 2000 doesn't spin the motor at all (maybe to do with current?)
-  driver.VACTUAL(0);
+  // driver.VACTUAL(0);
+
+  bool currentStep = LOW;
+  while (true)
+  {
+    digitalWrite(STEP_PIN, currentStep);
+    currentStep = !currentStep;
+    delay(100);
+  }
 
   // Time::reset();
 
