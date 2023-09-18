@@ -51,16 +51,40 @@ void setup()
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
+  uint8_t auto_grad = driver.pwm_grad_auto();
+  int16_t auto_scale = driver.pwm_scale_auto();
+  uint8_t auto_ofs = driver.pwm_ofs_auto();
+
+  Serial.print("Auto grad: ");
+  Serial.println(auto_grad);
+  Serial.print("Auto scale: ");
+  Serial.println(auto_scale);
+  Serial.print("Auto ofs: ");
+  Serial.println(auto_ofs);
+
+  auto_tune();
+
+  auto_grad = driver.pwm_grad_auto();
+  auto_scale = driver.pwm_scale_auto();
+  auto_ofs = driver.pwm_ofs_auto();
+
+  Serial.print("Auto grad: ");
+  Serial.println(auto_grad);
+  Serial.print("Auto scale: ");
+  Serial.println(auto_scale);
+  Serial.print("Auto ofs: ");
+  Serial.println(auto_ofs);
+
   // TODO: figure out why vactual < 2000 doesn't spin the motor at all (maybe to do with current?)
   // driver.VACTUAL(0);
 
-  bool currentStep = LOW;
-  while (true)
-  {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    delay(100);
-  }
+  // bool currentStep = LOW;
+  // while (true)
+  // {
+  //   digitalWrite(STEP_PIN, currentStep);
+  //   currentStep = !currentStep;
+  //   delay(100);
+  // }
 
   // Time::reset();
 
@@ -83,19 +107,54 @@ void auto_tune()
   uint8_t irun_before = driver.irun();
 
   // temporarily set ihold and irun to max for tuning
+  driver.ihold(31);
+  driver.irun(31);
+
   delay(100); // wait for auto tuning step 1 (standstill) to complete
 
   // TODO: probably replace with a bezier curve or velocity control once we know everything is working
   bool currentStep = LOW;
-  int currentDelay = 1000;
-  while (currentDelay <= 1000)
+  uint32_t currentSpeed = 100;
+
+  while (currentSpeed < 500)
   {
     digitalWrite(STEP_PIN, currentStep);
     currentStep = !currentStep;
-    delayMicroseconds(currentDelay);
-    // min delay of 1, ramp up then down
-    currentDelay = currentDelay >= 1 ? currentDelay - 1 : currentDelay + 1;
+    microsteps_per_second_to_delay(currentSpeed);
+    currentSpeed++;
   }
+
+  for (int i = 0; i < 1000; i++)
+  {
+    digitalWrite(STEP_PIN, currentStep);
+    currentStep = !currentStep;
+    microsteps_per_second_to_delay(currentSpeed);
+  }
+
+  while (currentSpeed > 100)
+  {
+    digitalWrite(STEP_PIN, currentStep);
+    currentStep = !currentStep;
+    microsteps_per_second_to_delay(currentSpeed);
+    currentSpeed--;
+  }
+
+  driver.ihold(ihold_before);
+  driver.irun(irun_before);
+
+  Serial.println("Auto tuning complete");
+}
+
+void microsteps_per_second_to_delay(uint32_t microsteps_per_second)
+{
+  // frequency: microsteps_per_second
+  // period: 1/f (seconds per microstep)
+  double periodSeconds = 1.0 / microsteps_per_second;
+  uint32_t periodMicroseconds = periodSeconds * 1000000;
+
+  unsigned long startMicros = micros();
+  while (micros() - startMicros < periodMicroseconds)
+    continue;
 }
 
 void runVelocity(Bezier curve)
