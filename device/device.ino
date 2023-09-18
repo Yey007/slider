@@ -51,40 +51,10 @@ void setup()
   Serial.print("Microsteps: ");
   Serial.println(ms);
 
-  uint8_t auto_grad = driver.pwm_grad_auto();
-  int16_t auto_scale = driver.pwm_scale_auto();
-  uint8_t auto_ofs = driver.pwm_ofs_auto();
-
-  Serial.print("Auto grad: ");
-  Serial.println(auto_grad);
-  Serial.print("Auto scale: ");
-  Serial.println(auto_scale);
-  Serial.print("Auto ofs: ");
-  Serial.println(auto_ofs);
-
-  auto_tune();
-
-  auto_grad = driver.pwm_grad_auto();
-  auto_scale = driver.pwm_scale_auto();
-  auto_ofs = driver.pwm_ofs_auto();
-
-  Serial.print("Auto grad: ");
-  Serial.println(auto_grad);
-  Serial.print("Auto scale: ");
-  Serial.println(auto_scale);
-  Serial.print("Auto ofs: ");
-  Serial.println(auto_ofs);
+  autoTune();
 
   // TODO: figure out why vactual < 2000 doesn't spin the motor at all (maybe to do with current?)
-  // driver.VACTUAL(0);
-
-  // bool currentStep = LOW;
-  // while (true)
-  // {
-  //   digitalWrite(STEP_PIN, currentStep);
-  //   currentStep = !currentStep;
-  //   delay(100);
-  // }
+  // driver.VACTUAL(10000);
 
   // Time::reset();
 
@@ -101,7 +71,7 @@ void loop()
 {
 }
 
-void auto_tune()
+void autoTune()
 {
   uint8_t ihold_before = driver.ihold();
   uint8_t irun_before = driver.irun();
@@ -113,47 +83,48 @@ void auto_tune()
   delay(100); // wait for auto tuning step 1 (standstill) to complete
 
   // TODO: probably replace with a bezier curve or velocity control once we know everything is working
-  bool currentStep = LOW;
-  uint32_t currentSpeed = 100;
+  const uint32_t initial_speed = 100;
+  const uint32_t max_speed = 500;
+  const uint32_t max_velo_iterations = 4000;
 
-  while (currentSpeed < 500)
+  bool current_step = LOW;
+  uint32_t current_speed = initial_speed;
+
+  while (current_speed < max_speed)
   {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
-    currentSpeed++;
+    digitalWrite(STEP_PIN, current_step);
+    current_step = !current_step;
+    microstepsPerSecondToDelay(current_speed);
+    current_speed++; // This isn't really constant acceleration, but doesn't matter much at these speeds.
   }
 
-  for (int i = 0; i < 1000; i++)
+  for (int i = 0; i < max_velo_iterations; i++)
   {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
+    digitalWrite(STEP_PIN, current_step);
+    current_step = !current_step;
+    microstepsPerSecondToDelay(current_speed);
   }
 
-  while (currentSpeed > 100)
+  while (current_speed > initial_speed)
   {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
-    currentSpeed--;
+    digitalWrite(STEP_PIN, current_step);
+    current_step = !current_step;
+    microstepsPerSecondToDelay(current_speed);
+    current_speed--;
   }
 
   driver.ihold(ihold_before);
   driver.irun(irun_before);
-
-  Serial.println("Auto tuning complete");
 }
 
-void microsteps_per_second_to_delay(uint32_t microsteps_per_second)
+void microstepsPerSecondToDelay(uint32_t microsteps_per_second)
 {
-  // frequency: microsteps_per_second
   // period: 1/f (seconds per microstep)
-  double periodSeconds = 1.0 / microsteps_per_second;
-  uint32_t periodMicroseconds = periodSeconds * 1000000;
+  double period_seconds = 1.0 / microsteps_per_second;
+  uint32_t period_micros = period_seconds * 1000000;
 
-  unsigned long startMicros = micros();
-  while (micros() - startMicros < periodMicroseconds)
+  unsigned long start_micros = micros();
+  while (micros() - start_micros < period_micros)
     continue;
 }
 
@@ -174,9 +145,9 @@ void runVelocity(Bezier curve)
   }
 }
 
-int64_t currentTicks = 0;
-bool currentStep = LOW;
-bool previousReverse = false;
+int64_t current_ticks = 0;
+bool current_step = LOW;
+bool previous_reverse = false;
 
 // TODO: we should really figure out what we wanna do in terms of torque control.
 // Maybe we should load the profile onto the Arduino or the app or something,
@@ -194,9 +165,9 @@ void run(Bezier curve)
     }
 
     Distance sample = curve.sample(now);
-    uint32_t targetPosition = sample.toMicrosteps();
+    uint32_t target_position = sample.toMicrosteps();
 
-    if (abs(targetPosition - currentTicks) > 1)
+    if (abs(target_position - current_ticks) > 1)
     {
       // TODO: It seems like we can't generate step pulses fast enough to keep up with basic curves.
       // We need to optimize, reduce microsteps, or figure something else out.
@@ -206,12 +177,12 @@ void run(Bezier curve)
       // Serial.println("Can't keep up! More than a tick behind per iteration.");
     }
 
-    bool reverse = targetPosition < currentTicks;
+    bool reverse = target_position < current_ticks;
     digitalWrite(DIR_PIN, reverse);
 
-    currentStep = !currentStep;
-    digitalWrite(STEP_PIN, currentStep);
+    current_step = !current_step;
+    digitalWrite(STEP_PIN, current_step);
 
-    currentTicks += reverse ? -1 : 1;
+    current_ticks += reverse ? -1 : 1;
   }
 }
