@@ -114,29 +114,29 @@ void auto_tune()
 
   // TODO: probably replace with a bezier curve or velocity control once we know everything is working
   bool currentStep = LOW;
-  uint32_t currentSpeed = 100;
+  double acceleration = 20;  // usteps / s^2
+  double currentSpeed = 100; // usteps / s
+  uint64_t lastLoopTime = micros();
+  uint64_t lastStepTime = micros();
 
   while (currentSpeed < 500)
   {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
-    currentSpeed++;
-  }
+    uint64_t now = micros();
+    uint64_t deltaMicroseconds = now - lastLoopTime;
+    lastLoopTime = now;
 
-  for (int i = 0; i < 1000; i++)
-  {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
-  }
+    double periodSeconds = 1.0 / currentSpeed;             // s
+    uint32_t periodMicroseconds = periodSeconds * 1000000; // us
 
-  while (currentSpeed > 100)
-  {
-    digitalWrite(STEP_PIN, currentStep);
-    currentStep = !currentStep;
-    microsteps_per_second_to_delay(currentSpeed);
-    currentSpeed--;
+    if (now - lastStepTime > periodMicroseconds)
+    {
+      currentStep = !currentStep;
+      digitalWrite(STEP_PIN, currentStep);
+      lastStepTime = now;
+    }
+
+    double deltaSeconds = (double)deltaMicroseconds / 1000000;
+    currentSpeed += acceleration * deltaSeconds;
   }
 
   driver.ihold(ihold_before);
@@ -145,7 +145,7 @@ void auto_tune()
   Serial.println("Auto tuning complete");
 }
 
-void microsteps_per_second_to_delay(uint32_t microsteps_per_second)
+void microsteps_per_second_to_period(uint32_t microsteps_per_second)
 {
   // frequency: microsteps_per_second
   // period: 1/f (seconds per microstep)
