@@ -21,6 +21,9 @@ class ChartPainter extends CustomPainter {
 
   @override
   paint(Canvas canvas, Size size) {
+    // idea: use canvas transform functions to handle zoom and stuff instead
+    // of doing it ourselves. Will require using inverse transform to get
+    // back proper coordinates, i imagine.
     canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     var mainPaint = Paint()

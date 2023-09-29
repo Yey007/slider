@@ -4,10 +4,10 @@ import 'package:slider_app/cartesian_rectangle.dart';
 
 class Bounds {
   final CartesianRectangle<double> _maxBounds;
-  CartesianRectangle<double>? _scaleStartBounds;
   CartesianRectangle<double> _currentBounds;
 
   Point<double>? _previousFocalPoint;
+  double? _previousScale;
 
   Bounds({required CartesianRectangle<double> maxBounds})
       : _maxBounds = maxBounds,
@@ -15,49 +15,37 @@ class Bounds {
 
   CartesianRectangle<double> get rect => _currentBounds;
 
-  void startScale() => _scaleStartBounds = _currentBounds;
+  void startScale() {}
 
   void continueScale(double scale, Point<double> focalPoint) {
-    if (_scaleStartBounds == null) {
-      throw Exception('startScale must be called before continuing a scale.');
-    }
+    _previousFocalPoint ??= focalPoint;
+    _previousScale ??= scale;
 
-    var startBoundsWidth = _scaleStartBounds!.width;
-    var startBoundsHeight = _scaleStartBounds!.height;
+    var scaleChange = scale / _previousScale!;
 
-    var newWidth = startBoundsWidth / scale;
-    var newHeight = startBoundsHeight / scale;
+    var newWidth = _currentBounds.width / scaleChange;
+    var newHeight = _currentBounds.height / scaleChange;
 
-    // keep focal point in the same place in chart space
-    var startFocalDelta = focalPoint - _scaleStartBounds!.bottomLeft;
-    var bottomLeft = Point(
-      focalPoint.x - (startFocalDelta.x / startBoundsWidth * newWidth),
-      focalPoint.y - (startFocalDelta.y / startBoundsHeight * newHeight),
-    );
+    // Take distance between current focal point and initial bottom left corner.
+    var deltaFocalFromPrevCorner = focalPoint - _currentBounds.bottomLeft;
+    var focalDelta = focalPoint - _previousFocalPoint!;
+    // Scale that distance down, and move bottom left closer to the
+    // focal point so that the new distance is the scaled down distance.
+    var bottomLeft =
+        focalPoint - deltaFocalFromPrevCorner * (1 / scaleChange) - focalDelta;
 
     var newBounds = CartesianRectangle.fromBLWH(
         bottomLeft: bottomLeft, width: newWidth, height: newHeight);
 
     _currentBounds = _chopBounds(newBounds);
     _previousFocalPoint = focalPoint;
+    _previousScale = scale;
   }
 
-  void endScale() => _scaleStartBounds = null;
-
-  void startPan(Point<double> touchPoint) => _previousFocalPoint = touchPoint;
-
-  void continuePan(Point<double> touchPoint) {
-    var delta = touchPoint - _previousFocalPoint!;
-
-    var newBottomLeft = _currentBounds.bottomLeft - delta;
-    _currentBounds = CartesianRectangle.fromBLWH(
-      bottomLeft: newBottomLeft,
-      width: _currentBounds.width,
-      height: _currentBounds.height,
-    );
+  void endScale() {
+    _previousFocalPoint = null;
+    _previousScale = null;
   }
-
-  void endPan() => _previousFocalPoint = null;
 
   CartesianRectangle<double> _chopBounds(CartesianRectangle<double> bounds) {
     var choppedBottomLeft = bounds.bottomLeft;

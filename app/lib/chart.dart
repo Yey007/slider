@@ -89,7 +89,8 @@ class _ChartState extends State<Chart> {
       });
     } else {
       setState(() {
-        bounds.startPan(chartSpace);
+        // bounds.startPan(chartSpace);
+        bounds.startScale();
       });
     }
   }
@@ -104,9 +105,10 @@ class _ChartState extends State<Chart> {
         interactiveCurves.continueDrag(chartSpace);
       });
     } else {
-      // print(chartSpace);
       setState(() {
-        bounds.continuePan(chartSpace);
+        // bounds.continuePan(chartSpace);
+        // print(chartSpace);
+        bounds.continueScale(1.0, chartSpace);
       });
     }
   }
@@ -118,7 +120,7 @@ class _ChartState extends State<Chart> {
       });
     } else {
       setState(() {
-        bounds.endPan();
+        bounds.endScale();
       });
     }
   }
