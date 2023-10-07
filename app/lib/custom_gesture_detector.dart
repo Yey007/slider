@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:async/async.dart';
@@ -90,6 +91,11 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
   RestartableTimer? scrollTimer;
   Offset scrollSum = Offset.zero;
 
+  Offset previousDrag = Offset.zero;
+  Timer? interpolationTimer;
+  Duration interpolationTime = const Duration(milliseconds: 25);
+  int nEvents = 20;
+
   @override
   Widget build(BuildContext context) {
     return Listener(
@@ -107,13 +113,25 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
   void _onPointerMove(PointerMoveEvent event) {
     if (event.down) {
       if (activePointer == event.pointer) {
-        widget.onDragUpdate?.call(DragUpdateDetails(
-          localPosition: event.localPosition,
-          deviceKind: event.kind,
-        ));
+        setState(() {
+          interpolationTimer?.cancel();
+          var interpolationPeriod = interpolationTime ~/ nEvents;
+          interpolationTimer = Timer.periodic(interpolationPeriod, (timer) {
+            Duration passed = interpolationPeriod * timer.tick;
+            double percent =
+                passed.inMilliseconds / interpolationTime.inMilliseconds;
+            Offset dragDelta = event.localPosition - previousDrag;
+            widget.onDragUpdate?.call(DragUpdateDetails(
+              localPosition: previousDrag + dragDelta * percent,
+              deviceKind: event.kind,
+            ));
+          });
+          previousDrag = event.localPosition;
+        });
       } else if (activePointer == null) {
         setState(() {
           activePointer = event.pointer;
+          previousDrag = event.localPosition;
         });
         widget.onDragStart?.call(DragStartDetails(
           localPosition: event.localPosition,
@@ -127,6 +145,7 @@ class _CustomGestureDetectorState extends State<CustomGestureDetector> {
     if (activePointer == event.pointer) {
       setState(() {
         activePointer = null;
+        interpolationTimer?.cancel();
       });
       widget.onDragEnd?.call();
     }
