@@ -1,14 +1,13 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:slider_app/coordinate_converter.dart';
 import 'package:slider_app/interactive_curves.dart';
-import 'bounds.dart';
 import 'custom_gesture_detector.dart' as detector;
 import 'conversion_extensions.dart';
 
 import 'bezier.dart';
 import 'chart_painter.dart';
-import 'cartesian_rectangle.dart';
 
 class Chart extends StatefulWidget {
   const Chart({
@@ -25,6 +24,9 @@ class _ChartState extends State<Chart> {
   static const controlRadius = 10.0;
   static const dragRadius = 20.0;
 
+  var coordinateConverter =
+      CoordinateConverter(const Size(horizontalMax, verticalMax));
+
   var interactiveCurves = InteractiveCurvesList(curves: [
     BezierCurve(
       start: const Point(0, 0),
@@ -33,13 +35,6 @@ class _ChartState extends State<Chart> {
       end: const Point(1, 80),
     )
   ]);
-
-  var bounds = Bounds(
-    maxBounds: const CartesianRectangle<double>(
-      Point(0, 0),
-      Point(horizontalMax, verticalMax),
-    ),
-  );
 
   final painterKey = GlobalKey();
   Offset mousePos = Offset.zero;
@@ -60,8 +55,7 @@ class _ChartState extends State<Chart> {
         child: CustomPaint(
           painter: ChartPainter(
             theme: Theme.of(context),
-            curves: interactiveCurves.curves,
-            bounds: bounds.rect,
+            curves: interactiveCurves.curves.map(convertCurveToScreenSpace),
             controlRadius: controlRadius,
           ),
           key: painterKey,
@@ -74,42 +68,32 @@ class _ChartState extends State<Chart> {
   onDragStart(detector.DragStartDetails details) {
     var painter = getPainter();
     var position = details.localPosition.toPoint();
-    var chartSpace = position.toChartSpace(painter.size, bounds.rect);
+    var chartSpace = coordinateConverter.toChartSpace(position, painter.size);
 
     var ref = interactiveCurves.getClosestPoint(chartSpace);
 
-    var closestScreenSpace = interactiveCurves[ref].toScreenSpace(
-      painter.size,
-      bounds.rect,
-    );
+    var closestScreenSpace =
+        coordinateConverter.toScreenSpace(interactiveCurves[ref], painter.size);
 
     if (position.distanceTo(closestScreenSpace) < dragRadius) {
       setState(() {
         interactiveCurves.startDrag(ref);
       });
     } else {
-      setState(() {
-        // bounds.startPan(chartSpace);
-        bounds.startScale();
-      });
+      // TODO: pan
     }
   }
 
   onDragUpdate(detector.DragUpdateDetails details) {
-    var chartSpace = details.localPosition
-        .toPoint()
-        .toChartSpace(getPainter().size, bounds.rect);
+    var chartSpace = coordinateConverter.toChartSpace(
+        details.localPosition.toPoint(), getPainter().size);
 
     if (interactiveCurves.dragging) {
       setState(() {
         interactiveCurves.continueDrag(chartSpace);
       });
     } else {
-      setState(() {
-        // bounds.continuePan(chartSpace);
-        // print(chartSpace);
-        bounds.continueScale(1.0, chartSpace);
-      });
+      // TODO: pan
     }
   }
 
@@ -119,35 +103,37 @@ class _ChartState extends State<Chart> {
         interactiveCurves.endDrag();
       });
     } else {
-      setState(() {
-        bounds.endScale();
-      });
+      // TODO: pan
     }
   }
 
   onScaleStart(detector.PanZoomStartDetails details) {
-    setState(() {
-      bounds.startScale();
-    });
+    // TODO: scale
   }
 
   onScaleUpdate(detector.PanZoomUpdateDetails details) {
-    setState(() {
-      // for some reason, the position from the event is not always accurate, so we use a mouseRegion.
-      var focalPoint =
-          mousePos.toPoint().toChartSpace(getPainter().size, bounds.rect);
-      bounds.continueScale(details.scale, focalPoint);
-    });
+    // TODO: scale
   }
 
   onScaleEnd(detector.PanZoomEndDetails details) {
-    setState(() {
-      bounds.endScale();
-    });
+    // TODO: scale
   }
 
   RenderBox getPainter() {
     var painter = painterKey.currentContext!.findRenderObject() as RenderBox;
     return painter;
+  }
+
+  BezierCurve convertCurveToScreenSpace(BezierCurve curve) {
+    var size = getPainter().size;
+    Point<double> transformPoint(Point<double> p) {
+      return coordinateConverter.toScreenSpace(p, size);
+    }
+
+    return BezierCurve(
+        start: transformPoint(curve.start),
+        end: transformPoint(curve.end),
+        controlPoint1: transformPoint(curve.controlPoint1),
+        controlPoint2: transformPoint(curve.controlPoint2));
   }
 }

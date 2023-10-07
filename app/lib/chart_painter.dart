@@ -4,18 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:slider_app/bezier.dart';
 import 'package:slider_app/conversion_extensions.dart';
 
-import 'cartesian_rectangle.dart';
-
 class ChartPainter extends CustomPainter {
   ThemeData theme;
   Iterable<BezierCurve> curves;
-  CartesianRectangle bounds;
   double controlRadius;
 
   ChartPainter({
     required this.theme,
     required this.curves,
-    required this.bounds,
     required this.controlRadius,
   });
 
@@ -35,8 +31,6 @@ class ChartPainter extends CustomPainter {
     var origin = Offset(0, size.height);
     canvas.drawLine(Offset.zero, origin, mainPaint);
     canvas.drawLine(origin, Offset(size.width, size.height), mainPaint);
-
-    curves = curves.map((c) => c.toScreenSpace(size, bounds)).toList();
 
     for (var curve in curves) {
       drawCurve(curve, canvas, mainPaint);

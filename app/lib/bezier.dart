@@ -1,8 +1,4 @@
 import 'dart:math';
-import 'dart:ui';
-
-import 'cartesian_rectangle.dart';
-import 'conversion_extensions.dart';
 
 class BezierCurve {
   Point<double> start;
@@ -45,19 +41,6 @@ class BezierCurve {
         controlPoint2 = value;
         break;
     }
-  }
-
-  BezierCurve toScreenSpace(Size screenSize, CartesianRectangle bounds) {
-    transformPoint(Point<double> point) {
-      return point.toScreenSpace(screenSize, bounds);
-    }
-
-    return BezierCurve(
-      start: transformPoint(start),
-      end: transformPoint(end),
-      controlPoint1: transformPoint(controlPoint1),
-      controlPoint2: transformPoint(controlPoint2),
-    );
   }
 }
 
