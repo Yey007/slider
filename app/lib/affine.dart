@@ -17,6 +17,10 @@ class AffineTransform {
         _matrix * other._matrix, _matrix * other._constant + _constant);
   }
 
+  AffineTransform then(AffineTransform other) {
+    return other.compose(this);
+  }
+
   AffineTransform inverse() {
     var inverse = Matrix2.zero()..copyInverse(_matrix);
     return AffineTransform(inverse, -inverse * _constant);

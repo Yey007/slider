@@ -51,7 +51,6 @@ class _ChartState extends State<Chart> {
         onDragEnd: onDragEnd,
         onPanZoomStart: onScaleStart,
         onPanZoomUpdate: onScaleUpdate,
-        onPanZoomEnd: onScaleEnd,
         child: CustomPaint(
           painter: ChartPainter(
             theme: Theme.of(context),
@@ -80,20 +79,26 @@ class _ChartState extends State<Chart> {
         interactiveCurves.startDrag(ref);
       });
     } else {
-      // TODO: pan
+      setState(() {
+        coordinateConverter.startPanZoom(details.localPosition);
+      });
     }
   }
 
   onDragUpdate(detector.DragUpdateDetails details) {
+    var painterSize = getPainter().size;
     var chartSpace = coordinateConverter.toChartSpace(
-        details.localPosition.toPoint(), getPainter().size);
+        details.localPosition.toPoint(), painterSize);
 
     if (interactiveCurves.dragging) {
       setState(() {
         interactiveCurves.continueDrag(chartSpace);
       });
     } else {
-      // TODO: pan
+      setState(() {
+        coordinateConverter.continuePanZoom(
+            1, details.localPosition, painterSize);
+      });
     }
   }
 
@@ -102,21 +107,20 @@ class _ChartState extends State<Chart> {
       setState(() {
         interactiveCurves.endDrag();
       });
-    } else {
-      // TODO: pan
     }
   }
 
   onScaleStart(detector.PanZoomStartDetails details) {
-    // TODO: scale
+    setState(() {
+      coordinateConverter.startPanZoom(details.localPosition);
+    });
   }
 
   onScaleUpdate(detector.PanZoomUpdateDetails details) {
-    // TODO: scale
-  }
-
-  onScaleEnd(detector.PanZoomEndDetails details) {
-    // TODO: scale
+    setState(() {
+      coordinateConverter.continuePanZoom(
+          details.scale, details.localPosition, getPainter().size);
+    });
   }
 
   RenderBox getPainter() {
