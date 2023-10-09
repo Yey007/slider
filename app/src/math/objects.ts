@@ -1,4 +1,4 @@
-type Space = "screen" | "chart";
+import { Space } from "../util/space";
 
 export type Point<TSpace extends Space> = {
   x: number;

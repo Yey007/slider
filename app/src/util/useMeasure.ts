@@ -1,8 +1,9 @@
 import { LegacyRef, useLayoutEffect, useRef, useState } from "react";
+import { Dimensions } from "./space";
 
 export function useMeasure(): [
   LegacyRef<HTMLDivElement>,
-  { width: number; height: number }
+  Dimensions<"screen">
 ] {
   const ref = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });

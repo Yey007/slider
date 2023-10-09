@@ -37,6 +37,7 @@ export class Matrix2 {
     );
   }
 
+  // TODO: properly represent non-invertible matrices?
   public inverse(): Matrix2 {
     const det = this.a00 * this.a11 - this.a01 * this.a10;
     return new Matrix2(
