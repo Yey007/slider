@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AffineTransform } from "./affine";
 import { Matrix2 } from "./matrix2";
 import { Dimensions } from "../util/space";
-import { Point } from "./objects";
+import { Point } from "./bezier";
 import { Vector2 } from "./vector2";
 
 export function useCoordinateConverter(
