@@ -3,8 +3,8 @@ import { Vector2 } from "./vector2";
 
 export class AffineTransform {
   public constructor(
-    private readonly matrix: Matrix2,
-    private readonly constant: Vector2
+    public readonly matrix: Matrix2,
+    public readonly constant: Vector2
   ) {}
 
   public static identity(): AffineTransform {

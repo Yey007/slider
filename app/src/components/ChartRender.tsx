@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
 
-import { useMeasure } from "../util/useMeasure";
-import { useCoordinateConverter } from "../math/useCoordinateConverter";
-import { BezierCurve, Point } from "../math/bezier";
-import { Dimensions } from "../util/space";
+import { BezierCurve } from "../math/bezier";
+import { Dimensions, Point } from "../util/space";
 
 // https://stackoverflow.com/a/46920541
 function fixDpr(
@@ -22,8 +20,9 @@ function clear(ctx: CanvasRenderingContext2D) {
   ctx.reset();
 }
 
-const CONTROL_RADIUS = 10;
+const CONTROL_RADIUS = 8;
 
+// TODO: don' draw curves into points
 function draw(
   ctx: CanvasRenderingContext2D,
   { width, height }: Dimensions<"screen">,

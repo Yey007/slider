@@ -1,17 +1,21 @@
-import { LegacyRef, useLayoutEffect, useRef, useState } from "react";
-import { Dimensions } from "./space";
+import { MutableRefObject, useLayoutEffect, useRef, useState } from "react";
+import { Dimensions, Point } from "./space";
 
 export function useMeasure(): [
-  LegacyRef<HTMLDivElement>,
-  Dimensions<"screen">
+  MutableRefObject<HTMLDivElement | null>,
+  Dimensions<"screen"> & Point<"screen">
 ] {
   const ref = useRef<HTMLDivElement | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [dimensions, setDimensions] = useState({
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+  });
 
   useLayoutEffect(() => {
     const observer = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setDimensions({ width, height });
+      setDimensions(entries[0].contentRect);
     });
 
     if (ref.current) {

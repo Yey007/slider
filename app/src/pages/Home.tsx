@@ -1,6 +1,5 @@
 import { IonContent, IonPage } from "@ionic/react";
 import "./Home.css";
-import ChartRender from "../components/ChartRender";
 import Chart from "../components/Chart";
 
 const Home: React.FC = () => {

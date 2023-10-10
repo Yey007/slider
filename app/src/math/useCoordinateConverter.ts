@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { AffineTransform } from "./affine";
 import { Matrix2 } from "./matrix2";
-import { Dimensions } from "../util/space";
-import { Point } from "./bezier";
+import { Dimensions, Point } from "../util/space";
 import { Vector2 } from "./vector2";
 
 export function useCoordinateConverter(
   canvasDimensions: Dimensions<"screen">,
   chartDimensions: Dimensions<"chart">
-): {
-  toScreenSpace: (point: Point<"chart">) => Point<"screen">;
-  toChartSpace: (point: Point<"screen">) => Point<"chart">;
-  panZoom: (scale: number, focalPoint: Point<"screen">) => void;
-} {
+) {
   const baseTransform = new AffineTransform(
     new Matrix2(
       canvasDimensions.width / chartDimensions.width,
@@ -40,9 +35,14 @@ export function useCoordinateConverter(
     return { x: result.x, y: result.y };
   }
 
+  function startPanZoom(focalPoint: Point<"screen">) {}
+
+  function panZoom(scale: number, focalPoint: Point<"screen">) {}
+
   return {
     toScreenSpace,
     toChartSpace,
-    panZoom: () => null,
+    startPanZoom,
+    panZoom,
   };
 }
