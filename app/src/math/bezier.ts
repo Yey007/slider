@@ -1,4 +1,4 @@
-import { Point, Space } from "../util/space";
+import { Point, Space } from "./space";
 
 // TODO: make classes, more strictly enforce space stuff?
 export type BezierCurve<TSpace extends Space> = {
