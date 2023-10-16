@@ -1,3 +1,5 @@
+import { Point, Space } from "./space";
+
 export class Vector2 {
   public constructor(public readonly x: number, public readonly y: number) {}
 
@@ -5,7 +7,11 @@ export class Vector2 {
     return new Vector2(0, 0);
   }
 
-  public add(vector: Vector2): Vector2 {
+  public plus(vector: Vector2): Vector2 {
     return new Vector2(this.x + vector.x, this.y + vector.y);
+  }
+
+  public toPoint<TSpace extends Space>(): Point<TSpace> {
+    return new Point(this.x, this.y);
   }
 }

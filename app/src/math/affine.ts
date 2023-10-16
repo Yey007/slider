@@ -12,7 +12,7 @@ export class AffineTransform {
   }
 
   public apply(vector: Vector2): Vector2 {
-    return this.matrix.multiplyVector(vector).add(this.constant);
+    return this.matrix.multiplyVector(vector).plus(this.constant);
   }
 
   public compose(other: AffineTransform): AffineTransform {
