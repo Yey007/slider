@@ -1,5 +1,5 @@
 {
-  "name": "app2",
+  "name": "app",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -38,7 +38,8 @@
     "@vitejs/plugin-react": "^4.0.1",
     "cypress": "^12.7.0",
     "eslint": "^8.35.0",
-    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "jsdom": "^22.1.0",
     "typescript": "^5.1.6",
     "vite": "^4.3.9",

@@ -28,23 +28,77 @@ function screenToCanvasCoordinates(point: Point<"screen">): Point<"canvas"> {
   return new Point(point.x - boundingRect.x, point.y - boundingRect.y);
 }
 
+// TODO: extract
 hammertime.get("pan").set({ direction: Hammer.DIRECTION_ALL, threshold: 0 });
+hammertime
+  .get("pinch")
+  .set({ enable: true, direction: Hammer.DIRECTION_ALL, threshold: 0 });
 
 hammertime.on("panstart", (e) => {
   const point = screenToCanvasCoordinates(new Point(e.center.x, e.center.y));
-  curveController.tryStartDrag(point);
+  const result = curveController.tryStartDrag(point);
+  if (!result) {
+    view.startPanZoom(point);
+  }
 });
 
 hammertime.on("panmove", (e) => {
   const point = screenToCanvasCoordinates(new Point(e.center.x, e.center.y));
-  if (!curveController.isDragging) {
-    return;
+  if (curveController.isDragging) {
+    curveController.continueDrag(point);
+  } else {
+    view.continuePanZoom(e.scale, point);
   }
-  curveController.continueDrag(point);
 });
 
 hammertime.on("panend", () => {
-  curveController.endDrag();
+  if (view.isPanZooming) {
+    view.endPanZoom();
+  }
+
+  if (curveController.isDragging) {
+    curveController.endDrag();
+  }
+});
+
+hammertime.on("pinchstart", (e) => {
+  const point = screenToCanvasCoordinates(new Point(e.center.x, e.center.y));
+  view.startPanZoom(point);
+});
+
+hammertime.on("pinchmove", (e) => {
+  const point = screenToCanvasCoordinates(new Point(e.center.x, e.center.y));
+  view.continuePanZoom(e.scale, point);
+});
+
+hammertime.on("pinchend", () => {
+  view.endPanZoom();
+});
+
+const SCALE_FACTOR = 1000;
+let timeout: number | null = null;
+let scaleSum = 0;
+
+canvas.addEventListener("wheel", (ev) => {
+  const position = screenToCanvasCoordinates(new Point(ev.x, ev.y));
+  scaleSum += ev.deltaY;
+  const scale = Math.exp(-scaleSum / SCALE_FACTOR);
+
+  if (!view.isPanZooming) {
+    view.startPanZoom(position);
+  } else {
+    view.continuePanZoom(scale, position);
+  }
+
+  if (timeout) {
+    window.clearTimeout(timeout);
+    timeout = null;
+  }
+
+  timeout = window.setTimeout(() => {
+    scaleSum = 0;
+    view.endPanZoom();
+  }, 100);
 });
 
 export let chartDimensions = CHART_DIMENSIONS;

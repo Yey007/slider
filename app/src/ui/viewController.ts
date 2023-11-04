@@ -8,9 +8,56 @@ import { Vector2 } from "../math/vector2";
 export class ViewController {
   private additionalTransform: AffineTransform = AffineTransform.identity();
 
-  startPanZoom(focalPoint: Point<"canvas">) {}
+  // TODO: extract delta logic to some other thing?
+  private previousScale: number | null = null;
+  private previousFocalPoint: Point<"canvas"> | null = null;
 
-  continuePanZoom(scale: number, focalPoint: Point<"canvas">) {}
+  public get isPanZooming(): boolean {
+    return this.previousScale !== null && this.previousFocalPoint !== null;
+  }
+
+  startPanZoom(focalPoint: Point<"canvas">) {
+    if (this.previousScale !== null || this.previousFocalPoint !== null) {
+      throw new Error("Cannot start PanZoom without ending it");
+    }
+    this.previousScale = 1;
+    this.previousFocalPoint = focalPoint;
+  }
+
+  continuePanZoom(scale: number, focalPoint: Point<"canvas">) {
+    if (this.previousScale === null || this.previousFocalPoint === null) {
+      throw new Error("Cannot continue PanZoom without starting it");
+    }
+
+    var scaleDelta = scale / this.previousScale;
+    var pan = focalPoint.toVector2().minus(this.previousFocalPoint.toVector2());
+
+    var panTransform = new AffineTransform(Matrix2.identity(), pan);
+
+    var shiftFocalToOrigin = new AffineTransform(
+      Matrix2.identity(),
+      focalPoint.toVector2().times(-1)
+    );
+    var scaleFromOrigin = new AffineTransform(
+      new Matrix2(scaleDelta, 0, 0, scaleDelta),
+      Vector2.zero()
+    );
+    var scaleTransform = shiftFocalToOrigin
+      .then(scaleFromOrigin)
+      .then(shiftFocalToOrigin.inverse());
+
+    this.additionalTransform = this.additionalTransform
+      .then(panTransform)
+      .then(scaleTransform);
+
+    this.previousScale = scale;
+    this.previousFocalPoint = focalPoint;
+  }
+
+  endPanZoom() {
+    this.previousScale = null;
+    this.previousFocalPoint = null;
+  }
 
   toCanvasSpace(point: Point<"chart">): Point<"canvas"> {
     const vector = point.toVector2();
