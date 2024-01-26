@@ -5,13 +5,13 @@
 struct Velocity
 {
 public:
-  Velocity(Distance distance, Time time);
+    Velocity(Distance distance, Time time);
 
-  float toMicrostepsPerSecond() const;
+    float toMicrostepsPerSecond() const;
 
 private:
-  Distance distance;
-  Time time;
+    Distance distance;
+    Time time;
 };
 
 Velocity operator/(const Distance &distance, const Time &time);

@@ -7,10 +7,10 @@ Velocity::Velocity(Distance distance, Time time)
 
 float Velocity::toMicrostepsPerSecond() const
 {
-  return distance.toMicrosteps() / time.toSeconds();
+    return distance.toMicrosteps() / time.toSeconds();
 }
 
 Velocity operator/(const Distance &distance, const Time &time)
 {
-  return Velocity(distance, time);
+    return Velocity(distance, time);
 }

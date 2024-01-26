@@ -4,16 +4,16 @@
 struct Distance
 {
 public:
-  static Distance fromCentimeters(float centimeters);
-  static Distance fromMillimeters(float millimeters);
-  static Distance fromMicrosteps(float ticks);
+    static Distance fromCentimeters(float centimeters);
+    static Distance fromMillimeters(float millimeters);
+    static Distance fromMicrosteps(float ticks);
 
-  float toCentimeters() const;
-  float toMillimeters() const;
-  float toMicrosteps() const;
+    float toCentimeters() const;
+    float toMillimeters() const;
+    float toMicrosteps() const;
 
 private:
-  float microsteps;
+    float microsteps;
 };
 
 Distance operator*(const Distance &distance, float scalar);

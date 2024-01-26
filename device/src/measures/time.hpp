@@ -4,17 +4,17 @@
 struct Time
 {
 public:
-  static Time fromSeconds(float seconds);
-  static Time fromMilliseconds(float milliseconds);
-  static Time now();
-  static void reset();
+    static Time fromSeconds(float seconds);
+    static Time fromMilliseconds(float milliseconds);
+    static Time now();
+    static void reset();
 
-  float toSeconds() const;
-  float toMilliseconds() const;
+    float toSeconds() const;
+    float toMilliseconds() const;
 
 private:
-  float milliseconds;
-  static float baseline;
+    float milliseconds;
+    static float baseline;
 };
 
 float operator/(const Time &time1, const Time &time2);
