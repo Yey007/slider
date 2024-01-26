@@ -2,6 +2,7 @@ import { canvasDimensions, chartDimensions } from "../main";
 import { AffineTransform } from "../math/affine";
 import { BezierCurve } from "../math/bezier";
 import { Matrix2 } from "../math/matrix2";
+import { Rect } from "../math/rect";
 import { Point } from "../math/space";
 import { Vector2 } from "../math/vector2";
 
@@ -12,8 +13,12 @@ export class ViewController {
   private previousScale: number | null = null;
   private previousFocalPoint: Point<"canvas"> | null = null;
 
-  public get isPanZooming(): boolean {
+  get isPanZooming(): boolean {
     return this.previousScale !== null && this.previousFocalPoint !== null;
+  }
+
+  get viewBounds(): Rect<"chart"> {
+    // apply inverse to canvasDimensions
   }
 
   startPanZoom(focalPoint: Point<"canvas">) {

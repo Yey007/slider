@@ -110,10 +110,7 @@ function update() {
 
   clear(context);
   fixDpr(context);
-  draw(
-    context,
-    START_CURVES.map((c) => view.curveToCanvasSpace(c))
-  );
+  draw(context, START_CURVES, view);
 
   window.requestAnimationFrame(update);
 }
