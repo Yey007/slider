@@ -8,6 +8,8 @@ export type Dimensions<TSpace extends Space> = {
 };
 
 export class Point<TSpace extends Space> {
+  private _type!: TSpace;
+
   constructor(public readonly x: number, public readonly y: number) {}
 
   public toVector2(): Vector2 {

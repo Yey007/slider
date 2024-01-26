@@ -1,6 +1,7 @@
-import { canvasDimensions } from "../main";
+import { canvasDimensions, chartDimensions } from "../main";
 import { BezierCurve } from "../math/bezier";
 import { Point } from "../math/space";
+import { ViewController } from "./viewController";
 
 export function fixDpr(ctx: CanvasRenderingContext2D) {
   const { width, height } = canvasDimensions;
@@ -22,10 +23,15 @@ const CONTROL_RADIUS = 8;
 // TODO: don' draw curves into points
 export function draw(
   ctx: CanvasRenderingContext2D,
-  curves: BezierCurve<"canvas">[]
+  curves: BezierCurve<"chart">[],
+  viewController: ViewController
 ) {
   const { width, height } = canvasDimensions;
   const foreground = "#ffffff";
+
+  const canvasCurves = curves.map((curve) =>
+    viewController.curveToCanvasSpace(curve)
+  );
 
   ctx.strokeStyle = foreground;
   ctx.lineWidth = 2;
@@ -91,7 +97,7 @@ export function draw(
     const x = (controlPoint.x - relatedEndpoint.x) * t + relatedEndpoint.x;
     const y = (controlPoint.y - relatedEndpoint.y) * t + relatedEndpoint.y;
 
-    line(relatedEndpoint, { x, y });
+    line(relatedEndpoint, new Point<"canvas">(x, y));
   }
 
   function drawCurve(curve: BezierCurve<"canvas">) {
@@ -108,11 +114,23 @@ export function draw(
     ctx.stroke();
   }
 
-  for (const curve of curves) {
+  for (const curve of canvasCurves) {
     drawCurve(curve);
     drawPoint(curve.start);
     drawPoint(curve.end);
     drawControlPoint(curve.control1, curve.start);
     drawControlPoint(curve.control2, curve.end);
+  }
+
+  const numVerticalLines = 5;
+  const divisionSize = numVerticalLines / (numVerticalLines + 1);
+
+  for (let i = 0; i < numVerticalLines + 1; i++) {
+    const start = new Point<"chart">(i * divisionSize, 0);
+    const end = new Point<"chart">(i * divisionSize, chartDimensions.height);
+    line(
+      viewController.toCanvasSpace(start),
+      viewController.toCanvasSpace(end)
+    );
   }
 }
