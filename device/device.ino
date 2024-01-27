@@ -58,13 +58,13 @@ void setup()
 
     Time::reset();
 
-    // Bezier curve = Bezier(
-    //     BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
-    //     BezierPoint(Distance::fromCentimeters(0), Time::fromMilliseconds(1000)),
-    //     BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(2000)),
-    //     BezierPoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
+    Bezier curve = Bezier(
+        BezierEndpoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
+        Distance::fromCentimeters(0),
+        Distance::fromCentimeters(10),
+        BezierEndpoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
 
-    // run(curve);
+    run(curve);
 }
 
 void loop()
