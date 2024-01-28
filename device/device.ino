@@ -32,7 +32,6 @@ void setup()
     driver.rms_current(400, 0.2);  // automatically calculates irun and ihold based on rms current and hold multiplier
     driver.iholddelay(10);         // some ramp down time to hold current (view docs for time calculation)
     driver.TPOWERDOWN(255);        // some time until ramp down begins (view docs for time calculation, this is around 5.6 seconds)
-    driver.vsense(false);
 
     driver.en_spreadCycle(false); // use StealthChop
 
@@ -50,18 +49,21 @@ void setup()
     Serial.print("Microsteps: ");
     Serial.println(ms);
 
-    driver.VACTUAL(10);
-    Serial.println("Start VACTUAL");
+    Bezier curve = Bezier(
+        BezierEndpoint(0, 0),
+        0,
+        100,
+        BezierEndpoint(100, 2000));
+
+    runVelo(curve, millis());
+    // run(curve, millis());
+
+    Serial.println("Run finished.");
 }
 
 void loop()
 {
-    driver.VACTUAL(2000);
 }
-
-dist_t current_ticks = 0;
-bool current_step = LOW;
-bool previous_reverse = false;
 
 // TODO: we should really figure out what we wanna do in terms of torque control.
 // Maybe we should load the profile onto the Arduino or the app or something,
@@ -69,29 +71,30 @@ bool previous_reverse = false;
 // that might require knowing the load in more detail. We can deal with this later.
 void run(Bezier curve, time_t startTime)
 {
+    dist_t current_ticks = 0;
+    bool current_step = LOW;
+    bool previous_reverse = false;
+
     while (true)
     {
         time_t now = millis() - startTime;
 
         if (now > curve.end.tMs)
         {
-            return;
+            break;
         }
 
         dist_t target_position = curve.sample(now);
-        // Serial.println(target_position);
+        int32_t diff = (int32_t)target_position - (int32_t)current_ticks;
 
-        if (abs(target_position - current_ticks) > 1)
+        if (abs(diff) > 1)
         {
-            // TODO: It seems like we can't generate step pulses fast enough to keep up with basic curves.
-            // We need to optimize, reduce microsteps, or figure something else out.
-            // Ideas for optimization: lookup table instead of on the fly curve computation (most likely to help, but there may be memory restrictions)
-            // PWM for pulse generation? Frequency is a constant 980Hz tho so will that work?
-
-            Serial.println("Can't keep up! More than a tick behind per iteration.");
+            Serial.print("Can't keep up! ");
+            Serial.print(abs(diff));
+            Serial.println(" ticks behind.");
         }
 
-        bool reverse = target_position < current_ticks;
+        bool reverse = diff < 0;
         digitalWrite(DIR_PIN, reverse);
 
         current_step = !current_step;
@@ -99,4 +102,23 @@ void run(Bezier curve, time_t startTime)
 
         current_ticks += reverse ? -1 : 1;
     }
+}
+
+void runVelo(Bezier curve, time_t startTime)
+{
+    while (true)
+    {
+        time_t now = millis() - startTime;
+
+        if (now > curve.end.tMs)
+        {
+            break;
+        }
+
+        velo_t target_velo = curve.sampleVelocity(now);
+
+        driver.VACTUAL(target_velo);
+    }
+
+    driver.VACTUAL(0);
 }

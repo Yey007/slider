@@ -4,6 +4,7 @@
 #include "math.h"
 
 #define dist_t uint16_t
+#define velo_t uint16_t
 #define time_t uint16_t
 
 const float NATIVE_STEP_ANGLE = 1.8;
