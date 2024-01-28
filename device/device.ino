@@ -1,5 +1,4 @@
 #include "motor_config.hpp"
-#include "src/measures/time.hpp"
 #include "bezier.hpp"
 #include <stdint.h>
 #include <math.h>
@@ -30,7 +29,7 @@ void setup()
     driver.toff(1); // Enables driver in software (can be any value except 0 for StealthChop)
 
     driver.internal_Rsense(true); // use internal sense resistors
-    driver.rms_current(900, 0.2); // automatically calculates irun and ihold based on rms current and hold multiplier
+    driver.rms_current(250, 0.2); // automatically calculates irun and ihold based on rms current and hold multiplier
     driver.iholddelay(10);        // some ramp down time to hold current (view docs for time calculation)
     driver.TPOWERDOWN(255);       // some time until ramp down begins (view docs for time calculation, this is around 5.6 seconds)
     driver.vsense(false);         // full voltage
@@ -51,20 +50,15 @@ void setup()
     Serial.print("Microsteps: ");
     Serial.println(ms);
 
-    autoTune();
-
-    // TODO: figure out why vactual < 2000 doesn't spin the motor at all (maybe to do with current?)
-    // driver.VACTUAL(10000);
-
-    Time::reset();
+    // autoTune();
 
     Bezier curve = Bezier(
-        BezierEndpoint(Distance::fromCentimeters(0), Time::fromMilliseconds(0)),
-        Distance::fromCentimeters(0),
-        Distance::fromCentimeters(10),
-        BezierEndpoint(Distance::fromCentimeters(10), Time::fromMilliseconds(3000)));
+        BezierEndpoint(0, 0),
+        0,
+        200,
+        BezierEndpoint(200, 2000));
 
-    run(curve);
+    run(curve, millis());
 }
 
 void loop()
@@ -128,24 +122,7 @@ void microstepsPerSecondToDelay(uint32_t microsteps_per_second)
         continue;
 }
 
-// void runVelocity(Bezier curve)
-// {
-//   while (true)
-//   {
-//     Time now = Time::now();
-
-//     if (now > curve.end.time)
-//     {
-//       return;
-//     }
-
-//     Velocity velocity = curve.sampleVelocity(now);
-
-//     driver.VACTUAL(velocity.toMicrostepsPerSecond()); // TODO: bad computation, needs conversion
-//   }
-// }
-
-int64_t current_ticks = 0;
+dist_t current_ticks = 0;
 bool current_step = LOW;
 bool previous_reverse = false;
 
@@ -153,19 +130,19 @@ bool previous_reverse = false;
 // Maybe we should load the profile onto the Arduino or the app or something,
 // so we can check what motions are really possible and what motions are not. Though
 // that might require knowing the load in more detail. We can deal with this later.
-void run(Bezier curve)
+void run(Bezier curve, time_t startTime)
 {
     while (true)
     {
-        Time now = Time::now();
+        time_t now = millis() - startTime;
 
-        if (now > curve.end.time)
+        if (now > curve.end.tMs)
         {
             return;
         }
 
-        Distance sample = curve.sample(now);
-        uint32_t target_position = sample.toMicrosteps();
+        dist_t target_position = curve.sample(now);
+        // Serial.println(target_position);
 
         if (abs(target_position - current_ticks) > 1)
         {
@@ -174,7 +151,7 @@ void run(Bezier curve)
             // Ideas for optimization: lookup table instead of on the fly curve computation (most likely to help, but there may be memory restrictions)
             // PWM for pulse generation? Frequency is a constant 980Hz tho so will that work?
 
-            // Serial.println("Can't keep up! More than a tick behind per iteration.");
+            Serial.println("Can't keep up! More than a tick behind per iteration.");
         }
 
         bool reverse = target_position < current_ticks;

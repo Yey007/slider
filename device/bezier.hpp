@@ -1,24 +1,22 @@
 #pragma once
-#include "src/measures/time.hpp"
-#include "src/measures/distance.hpp"
-#include "src/measures/velocity.hpp"
+#include "motor_config.hpp"
 
 struct BezierEndpoint
 {
 public:
-    BezierEndpoint(Distance x, Time time) : x(x), time(time) {}
+    BezierEndpoint(dist_t x, time_t time) : xTicks(x), tMs(time) {}
 
-    Distance x;
-    Time time;
+    dist_t xTicks;
+    time_t tMs;
 };
 
 struct Bezier
 {
 public:
     BezierEndpoint start, end;
-    Distance control1, control2;
+    dist_t control1, control2;
 
-    Bezier(BezierEndpoint start, Distance control1, Distance control2, BezierEndpoint end) : start(start), control1(control1), control2(control2), end(end) {}
+    Bezier(BezierEndpoint start, dist_t control1, dist_t control2, BezierEndpoint end) : start(start), control1(control1), control2(control2), end(end) {}
 
-    Distance sample(Time time);
+    dist_t sample(time_t time);
 };

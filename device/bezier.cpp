@@ -1,15 +1,16 @@
+#include "motor_config.hpp"
 #include "bezier.hpp"
 
-Distance Bezier::sample(Time time)
+dist_t Bezier::sample(time_t time)
 {
-    float t = time / (end.time - start.time);
+    float t = ((float)time) / (end.tMs - start.tMs);
     float oneMinus = 1 - t;
 
-    Distance dist =
-        start.x * oneMinus * oneMinus * oneMinus +
+    dist_t dist =
+        start.xTicks * oneMinus * oneMinus * oneMinus +
         3 * control1 * oneMinus * oneMinus * t +
         3 * control2 * oneMinus * t * t +
-        end.x * t * t * t;
+        end.xTicks * t * t * t;
 
     return dist;
 }

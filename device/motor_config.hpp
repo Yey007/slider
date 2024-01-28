@@ -3,6 +3,9 @@
 #include "Arduino.h"
 #include "math.h"
 
+#define dist_t uint16_t
+#define time_t uint16_t
+
 const float NATIVE_STEP_ANGLE = 1.8;
 const uint16_t MICROSTEPS = 1;
 const float DRIVE_GEAR_RADIUS = 24.0;
