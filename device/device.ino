@@ -10,7 +10,7 @@
 #define RX_PIN 7
 #define TX_PIN 6
 
-#define R_SENSE 0.11f // Not certain what this should be
+#define R_SENSE 0.11f // Board sense resistors are 110mOhm afaik
 
 TMC2208Stepper driver = TMC2208Stepper(RX_PIN, TX_PIN, R_SENSE);
 
@@ -21,6 +21,9 @@ void setup()
     pinMode(EN_PIN, OUTPUT);
     pinMode(STEP_PIN, OUTPUT);
     pinMode(DIR_PIN, OUTPUT);
+
+    digitalWrite(STEP_PIN, LOW);
+    digitalWrite(DIR_PIN, LOW);
     digitalWrite(EN_PIN, LOW); // Enable driver in hardware
 
     driver.beginSerial(115200); // Software UART drivers
@@ -29,7 +32,7 @@ void setup()
     driver.toff(1); // Enables driver in software (can be any value except 0 for StealthChop)
 
     driver.internal_Rsense(false); // don't use internal sense resistors (board should have some)
-    driver.rms_current(400, 0.2);  // automatically calculates irun and ihold based on rms current and hold multiplier
+    driver.rms_current(200, 0.2);  // automatically calculates irun and ihold based on rms current and hold multiplier
     driver.iholddelay(10);         // some ramp down time to hold current (view docs for time calculation)
     driver.TPOWERDOWN(255);        // some time until ramp down begins (view docs for time calculation, this is around 5.6 seconds)
 
@@ -51,12 +54,13 @@ void setup()
 
     Bezier curve = Bezier(
         BezierEndpoint(0, 0),
-        0,
-        100,
-        BezierEndpoint(100, 2000));
+        16,
+        35,
+        BezierEndpoint(50, 500));
 
-    runVelo(curve, millis());
-    // run(curve, millis());
+    // uint64_t now = millis();
+    // runVelo(curve, now);
+    curve.sampleVelocity(0);
 
     Serial.println("Run finished.");
 }
@@ -106,6 +110,8 @@ void run(Bezier curve, time_t startTime)
 
 void runVelo(Bezier curve, time_t startTime)
 {
+    bool first = true;
+
     while (true)
     {
         time_t now = millis() - startTime;
@@ -116,8 +122,14 @@ void runVelo(Bezier curve, time_t startTime)
         }
 
         velo_t target_velo = curve.sampleVelocity(now);
+        if (first)
+        {
+            Serial.print("Target velocity: ");
+            Serial.println(target_velo);
+            first = false;
+        }
 
-        driver.VACTUAL(target_velo);
+        driver.VACTUAL(target_velo / 0.715);
     }
 
     driver.VACTUAL(0);

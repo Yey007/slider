@@ -17,13 +17,16 @@ dist_t Bezier::sample(time_t time)
 
 velo_t Bezier::sampleVelocity(time_t time)
 {
-    float t = ((float)time) / (end.tMs - start.tMs);
+    float t = ((float)time) / ((float)end.tMs - (float)start.tMs);
     float oneMinus = 1 - t;
 
+    // TODO: This computation is missing a chain rule
     float velo =
         3 * oneMinus * oneMinus * (control1 - start.xTicks) +
         6 * oneMinus * t * (control2 - control1) +
         3 * t * t * (end.xTicks - control2);
+
+    Serial.println(velo);
 
     return velo;
 }
