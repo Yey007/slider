@@ -77,7 +77,6 @@ void run(Bezier curve, time_t startTime)
 {
     dist_t current_ticks = 0;
     bool current_step = LOW;
-    bool previous_reverse = false;
 
     while (true)
     {

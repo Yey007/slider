@@ -16,7 +16,7 @@ public:
     BezierEndpoint start, end;
     dist_t control1, control2;
 
-    Bezier(BezierEndpoint start, dist_t control1, dist_t control2, BezierEndpoint end) : start(start), control1(control1), control2(control2), end(end) {}
+    Bezier(BezierEndpoint start, dist_t control1, dist_t control2, BezierEndpoint end) : start(start), end(end), control1(control1), control2(control2) {}
 
     dist_t sample(time_t time);
     velo_t sampleVelocity(time_t time);
