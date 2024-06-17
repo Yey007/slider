@@ -46,7 +46,7 @@ void setup()
         nullptr,
         1,
         nullptr,
-        CORE_0);
+        CORE_1);
 }
 
 void loop()
