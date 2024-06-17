@@ -1,11 +1,7 @@
 #pragma once
 #include <stdint.h>
-#include "Arduino.h"
-#include "math.h"
-
-#define dist_t uint16_t
-#define velo_t uint16_t
-#define time_t uint16_t
+#include <Arduino.h>
+#include <math.h>
 
 const float NATIVE_STEP_ANGLE = 1.8;
 const uint16_t MICROSTEPS = 1;
